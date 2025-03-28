@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contador Binário com Cartas e Metrônomo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2a2a2a;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      width: 60px;
+      height: 90px;
+      perspective: 600px;
+    }
+
+    .inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .card.flipped .inner {
+      transform: rotateY(180deg);
+    }
+
+    .face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      border: 2px solid #fff;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      background: white;
+      color: black;
+    }
+
+    .front {
+      background: white;
+    }
+
+    .back {
+      background: red;
+      transform: rotateY(180deg);
+      color: white;
+    }
+
+    button, select {
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: #0f0;
+    }
+
+    button:hover {
+      background-color: #0c0;
+    }
+
+    select {
+      background-color: #fff;
+      color: #000;
+    }
+
+    .metronome {
+      position: relative;
+      width: 40px;
+      height: 150px;
+      margin: 20px auto;
+      background: #444;
+      border: 2px solid #fff;
+      border-radius: 5px;
+      padding-top: 20px;
+    }
+
+    .pendulum {
+      position: absolute;
+      width: 4px;
+      height: 100px;
+      background: yellow;
+      left: 50%;
+      top: 20px;
+      transform-origin: top;
+      transform: rotate(0deg);
+      transition: transform 0.3s ease-in-out;
+    }
+
+    .info-box {
+      margin-top: 10px;
+      padding: 10px;
+      border: 2px solid #fff;
+      border-radius: 8px;
+      display: inline-block;
+      background: #333;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Contador Binário com Cartas de Baralho</h1>
+
+<div class="controls">
+  <label for="bitSelect">Número de bits:</label>
+  <select id="bitSelect" onchange="mudarBits()">
+    <option value="1">1</option>
+    <option value="2">2</option>
+    <option value="3">3</option>
+    <option value="4">4</option>
+    <option value="8" selected>8</option>
+  </select>
+
+  <label for="periodSelect">Período:</label>
+  <select id="periodSelect" onchange="atualizarInfo()">
+    <option value="2000">2 s</option>
+    <option value="1500">1.5 s</option>
+    <option value="1000" selected>1 s</option>
+    <option value="500">0.5 s</option>
+    <option value="100">0.1 s</option>
+  </select>
+
+  <button onclick="toggleAuto()">Iniciar / Parar</button>
+  <button onclick="resetar()">Resetar</button>
+  <button onclick="incrementar()">Incrementar Manual</button>
+</div>
+
+<div class="container" id="bitContainer"></div>
+
+<div class="metronome">
+  <div class="pendulum" id="pendulum"></div>
+</div>
+
+<div class="info-box">
+  <div>Período: <span id="periodo"></span> s</div>
+  <div>Frequência: <span id="frequencia"></span> Hz</div>
+</div>
+
+<script>
+    let contador = 0;
+    let bits = 8;
+    let lado = true;
+    let autoInterval = null;
+
+    const container = document.getElementById('bitContainer');
+    const select = document.getElementById('bitSelect');
+    const pendulum = document.getElementById('pendulum');
+    const periodSelect = document.getElementById('periodSelect');
+    const periodoSpan = document.getElementById('periodo');
+    const frequenciaSpan = document.getElementById('frequencia');
+
+    function criarCartas() {
+        container.innerHTML = '';
+        for (let i = 0; i < bits; i++) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            const inner = document.createElement('div');
+            inner.className = 'inner';
+            const front = document.createElement('div');
+            front.className = 'face front';
+            front.textContent = '0';
+            const back = document.createElement('div');
+            back.className = 'face back';
+            back.textContent = '1';
+            inner.appendChild(front);
+            inner.appendChild(back);
+            card.appendChild(inner);
+            container.appendChild(card);
+        }
+    }
+
+    function atualizarCartas(valor) {
+        const binario = valor.toString(2).padStart(bits, '0');
+        const cards = container.children;
+        for (let i = 0; i < bits; i++) {
+            const bit = binario[i];
+            const card = cards[i];
+            const isFlipped = card.classList.contains('flipped');
+            if ((bit === '1' && !isFlipped) || (bit === '0' && isFlipped)) {
+                card.classList.toggle('flipped');
+            }
+        }
+    }
+
+    function balancarMetronomo() {
+        pendulum.style.transform = `rotate(${lado ? 20 : -20}deg)`;
+        lado = !lado;
+    }
+
+    function incrementar() {
+        const max = 2 ** bits;
+        contador = (contador + 1) % max;
+        atualizarCartas(contador);
+        balancarMetronomo();
+    }
+
+    function toggleAuto() {
+        if (autoInterval) {
+            clearInterval(autoInterval);
+            autoInterval = null;
+        } else {
+            autoInterval = setInterval(incrementar, parseInt(periodSelect.value));
+        }
+    }
+
+    function resetar() {
+        contador = 0;
+        atualizarCartas(contador);
+        pendulum.style.transform = 'rotate(0deg)';
+    }
+
+    function mudarBits() {
+        bits = parseInt(select.value);
+        contador = 0;
+        criarCartas();
+        atualizarCartas(contador);
+        pendulum.style.transform = 'rotate(0deg)';
+    }
+
+    function atualizarInfo() {
+        const periodo = parseInt(periodSelect.value) / 1000;
+        const frequencia = (1 / periodo).toFixed(2);
+        periodoSpan.textContent = periodo;
+        frequenciaSpan.textContent = frequencia;
+        if (autoInterval) {
+            clearInterval(autoInterval);
+            autoInterval = setInterval(incrementar, parseInt(periodSelect.value));
+        }
+    }
+
+    // Inicializa
+    criarCartas();
+    atualizarCartas(contador);
+    atualizarInfo();
+</script>
+
+</body>
+
+</html>
