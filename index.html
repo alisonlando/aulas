@@ -1,95 +1,271 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portas Lógicas com NAND e NOR</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1, h2 {
-            color: #333;
-        }
-        .circuito {
-            border: 1px solid #ccc;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        svg {
-            margin-top: 10px;
-        }
-    </style>
-</head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Contador Binário com Pêndulo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #2a2a2a;
+      color: #fff;
+      text-align: center;
+      padding: 40px;
+    }
 
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      margin-bottom: 20px;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      width: 60px;
+      height: 90px;
+      perspective: 600px;
+    }
+
+    .inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+
+    .card.flipped .inner {
+      transform: rotateY(180deg);
+    }
+
+    .face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      border: 2px solid #fff;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+      font-weight: bold;
+      background: white;
+      color: black;
+    }
+
+    .front {
+      background: white;
+    }
+
+    .back {
+      background: red;
+      transform: rotateY(180deg);
+      color: white;
+    }
+
+    button, select {
+      padding: 10px 16px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    button {
+      background-color: #0f0;
+    }
+
+    button:hover {
+      background-color: #0c0;
+    }
+
+    select {
+      background-color: #fff;
+      color: #000;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 16px;
+      color: #0f0;
+    }
+
+    /* Pêndulo */
+    .pendulo-wrapper {
+      margin-top: 40px;
+      height: 150px;
+      position: relative;
+    }
+
+    .pendulo {
+      width: 4px;
+      height: 100px;
+      background: #fff;
+      margin: 0 auto;
+      transform-origin: top center;
+      animation: balanco 1s infinite ease-in-out;
+    }
+
+    .peso {
+      width: 30px;
+      height: 30px;
+      background: #f00;
+      border-radius: 50%;
+      position: absolute;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    @keyframes balanco {
+      0%   { transform: rotate(-30deg); }
+      50%  { transform: rotate(30deg); }
+      100% { transform: rotate(-30deg); }
+    }
+  </style>
+</head>
 <body>
 
-    <h1>Projetos de Portas Lógicas com NAND e NOR</h1>
+  <h1>Contador Binário com Cartas de Baralho</h1>
 
-    <div class="circuito">
-        <h2>1) NOT com NAND</h2>
-        <p>NOT = NAND com as duas entradas ligadas juntas.</p>
-        <svg width="200" height="100">
-            <rect x="80" y="30" width="40" height="40" stroke="black" fill="none"/>
-            <text x="90" y="55" font-size="12">NAND</text>
-            <line x1="50" y1="50" x2="80" y2="50" stroke="black"/>
-            <text x="30" y="55" font-size="12">A</text>
-            <line x1="120" y1="50" x2="150" y2="50" stroke="black"/>
-            <text x="155" y="55" font-size="12">Y = NOT A</text>
-        </svg>
-    </div>
+  <div class="controls">
+    <label for="bitSelect">Número de bits:</label>
+    <select id="bitSelect" onchange="mudarBits()">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="8" selected>8</option>
+    </select>
 
-    <div class="circuito">
-        <h2>2) AND com NAND</h2>
-        <p>AND = NAND seguido de um NOT.</p>
-        <svg width="300" height="100">
-            <rect x="80" y="30" width="40" height="40" stroke="black" fill="none"/>
-            <text x="90" y="55" font-size="12">NAND</text>
-            <rect x="160" y="30" width="40" height="40" stroke="black" fill="none"/>
-            <text x="170" y="55" font-size="12">NAND</text>
-            <line x1="50" y1="40" x2="80" y2="40" stroke="black"/>
-            <text x="30" y="45" font-size="12">A</text>
-            <line x1="50" y1="60" x2="80" y2="60" stroke="black"/>
-            <text x="30" y="65" font-size="12">B</text>
-            <line x1="120" y1="50" x2="160" y2="50" stroke="black"/>
-            <line x1="200" y1="50" x2="230" y2="50" stroke="black"/>
-            <text x="235" y="55" font-size="12">Y = A AND B</text>
-        </svg>
-    </div>
+    <label for="tempoSelect">Tempo entre incrementos:</label>
+    <select id="tempoSelect" onchange="atualizarTempo()">
+      <option value="50">0.05s</option>
+      <option value="100">0.1s</option>
+      <option value="500">0.5s</option>
+      <option value="1000" selected>1s</option>
+      <option value="1500">1.5s</option>
+      <option value="2000">2s</option>
+    </select>
 
-    <div class="circuito">
-        <h2>3) OR com NAND</h2>
-        <p>OR = combinação de 3 NANDs.</p>
-    </div>
+    <button onclick="incrementar()">Incrementar</button>
+    <button onclick="alternarContador()">Iniciar/Parar automático</button>
+  </div>
 
-    <div class="circuito">
-        <h2>4) NOT com NOR</h2>
-        <p>NOT = NOR com entradas ligadas juntas.</p>
-    </div>
+  <div class="status" id="statusInfo">
+    Tempo: 1s | Frequência: 1 Hz
+  </div>
 
-    <div class="circuito">
-        <h2>5) AND com NOR</h2>
-        <p>AND = combinação de 3 NORs.</p>
-    </div>
+  <div class="container" id="bitContainer"></div>
 
-    <div class="circuito">
-        <h2>6) OR com NOR</h2>
-        <p>OR = NOR seguido de NOT.</p>
+  <!-- Pêndulo -->
+  <div class="pendulo-wrapper">
+    <div class="pendulo" id="pendulo">
+      <div class="peso"></div>
     </div>
+  </div>
 
-    <div class="circuito">
-        <h2>7) XOR com NAND ou NOR</h2>
-        <p>Implementação sugerida usando NAND ou NOR, escolha da equipe.</p>
-    </div>
+  <script>
+    let contador = 0;
+    let bits = 8;
+    let intervalo = 1000;
+    let intervaloId = null;
 
-    <div class="circuito">
-        <h2>8) Circuito Habilitador</h2>
-        <p>Escolher um circuito do livro Tocci e apresentar o projeto de teste aqui.</p>
-    </div>
+    const container = document.getElementById('bitContainer');
+    const selectBits = document.getElementById('bitSelect');
+    const selectTempo = document.getElementById('tempoSelect');
+    const statusInfo = document.getElementById('statusInfo');
+    const pendulo = document.getElementById('pendulo');
+
+    function criarCartas() {
+      container.innerHTML = '';
+      for (let i = 0; i < bits; i++) {
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        const inner = document.createElement('div');
+        inner.className = 'inner';
+
+        const front = document.createElement('div');
+        front.className = 'face front';
+        front.textContent = '0';
+
+        const back = document.createElement('div');
+        back.className = 'face back';
+        back.textContent = '1';
+
+        inner.appendChild(front);
+        inner.appendChild(back);
+        card.appendChild(inner);
+        container.appendChild(card);
+      }
+    }
+
+    function atualizarCartas(valor) {
+      const binario = valor.toString(2).padStart(bits, '0');
+      const cards = container.children;
+
+      for (let i = 0; i < bits; i++) {
+        const bit = binario[i];
+        const card = cards[i];
+        const isFlipped = card.classList.contains('flipped');
+
+        if ((bit === '1' && !isFlipped) || (bit === '0' && isFlipped)) {
+          card.classList.toggle('flipped');
+        }
+      }
+    }
+
+    function incrementar() {
+      const max = 2 ** bits;
+      contador = (contador + 1) % max;
+      atualizarCartas(contador);
+    }
+
+    function mudarBits() {
+      bits = parseInt(selectBits.value);
+      contador = 0;
+      criarCartas();
+      atualizarCartas(contador);
+    }
+
+    function atualizarTempo() {
+      intervalo = parseInt(selectTempo.value);
+      const freq = (1 / (intervalo / 1000)).toFixed(2);
+      statusInfo.textContent = `Tempo: ${(intervalo / 1000)}s | Frequência: ${freq} Hz`;
+
+      pendulo.style.animationDuration = `${intervalo / 1000}s`;
+
+      if (intervaloId) {
+        clearInterval(intervaloId);
+        intervaloId = setInterval(incrementar, intervalo);
+      }
+    }
+
+    function alternarContador() {
+      if (intervaloId) {
+        clearInterval(intervaloId);
+        intervaloId = null;
+      } else {
+        intervaloId = setInterval(incrementar, intervalo);
+      }
+    }
+
+    // Inicializa
+    mudarBits();
+    atualizarTempo();
+  </script>
 
 </body>
-
 </html>
