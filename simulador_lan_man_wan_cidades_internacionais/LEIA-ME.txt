@@ -1,0 +1,21 @@
+SIMULADOR LAN, MAN E WAN
+
+Arquivos:
+- index.html
+- style.css
+- script.js
+
+Como executar:
+1. Extraia a pasta.
+2. Abra o arquivo index.html em um navegador.
+3. Não é necessário instalar programas nem usar servidor local.
+
+Recursos:
+- Seleção entre LAN, MAN e WAN.
+- Topologias sem barras permanentes entre os equipamentos.
+- Cenário WAN com cidades do Brasil, Portugal, Estados Unidos e Japão.
+- Envio animado de pacotes saltando entre os equipamentos.
+- Registro dos saltos percorridos.
+- Comparação de área, latência, equipamentos e exemplos.
+- Desafio de perguntas.
+- Layout responsivo para computador, tablet e celular.

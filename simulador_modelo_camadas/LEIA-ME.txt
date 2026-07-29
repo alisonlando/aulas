@@ -1,0 +1,22 @@
+SIMULADOR DO MODELO OSI EM CAMADAS
+
+Arquivos:
+- index.html
+- style.css
+- script.js
+
+Como executar:
+1. Extraia o arquivo ZIP.
+2. Abra o arquivo index.html em um navegador.
+3. Não é necessário instalar servidor, biblioteca ou extensão.
+
+Recursos:
+- Visualização das sete camadas do modelo OSI.
+- Simulação de encapsulamento e desencapsulamento.
+- Escolha de protocolo de aplicação.
+- Execução automática ou passo a passo.
+- Diário da transmissão.
+- Informações de PDU, protocolos e equipamentos.
+- Atividade interativa com perguntas.
+- Tema claro e escuro.
+- Layout responsivo para computador, tablet e celular.

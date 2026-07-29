@@ -1,0 +1,23 @@
+SIMULADOR DO MODELO TCP/IP
+
+Arquivos:
+- index.html
+- style.css
+- script.js
+
+Como executar:
+1. Extraia o arquivo ZIP.
+2. Abra o arquivo index.html em um navegador.
+3. Não é necessário instalar programas, bibliotecas ou extensões.
+
+Recursos:
+- Visualização das quatro camadas do modelo TCP/IP.
+- Simulação de encapsulamento e desencapsulamento.
+- Escolha de protocolo de aplicação e transporte.
+- Execução automática ou passo a passo.
+- Diário detalhado da transmissão.
+- Informações sobre PDU, protocolos e equipamentos.
+- Comparação entre os modelos TCP/IP e OSI.
+- Atividade interativa com perguntas.
+- Tema claro e escuro.
+- Layout responsivo.

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador do Modelo OSI em Camadas</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <div>
+      <p class="tag">REDES DE COMPUTADORES</p>
+      <h1>Simulador do Modelo OSI</h1>
+      <p>Explore as sete camadas, acompanhe a encapsulação dos dados e teste seus conhecimentos.</p>
+    </div>
+    <button id="btnTema" class="botao-secundario" aria-label="Alternar tema">🌙 Tema</button>
+  </header>
+
+  <main>
+    <section class="painel introducao">
+      <div>
+        <h2>Como utilizar</h2>
+        <p>
+          Digite uma mensagem, escolha um protocolo de aplicação e pressione
+          <strong>Iniciar transmissão</strong>. O simulador mostrará a passagem
+          dos dados pelas camadas do computador de origem, pelo meio físico e
+          pelo computador de destino.
+        </p>
+      </div>
+      <div class="legenda">
+        <span><i class="cor origem"></i> Origem</span>
+        <span><i class="cor rede"></i> Rede</span>
+        <span><i class="cor destino"></i> Destino</span>
+      </div>
+    </section>
+
+    <section class="grade-principal">
+      <div class="painel controles">
+        <h2>1. Configure a comunicação</h2>
+
+        <label for="mensagem">Mensagem</label>
+        <textarea id="mensagem" rows="4" maxlength="120">Olá, servidor!</textarea>
+        <div class="contador"><span id="contador">13</span>/120 caracteres</div>
+
+        <label for="protocolo">Protocolo de aplicação</label>
+        <select id="protocolo">
+          <option value="HTTP">HTTP — acesso a páginas web</option>
+          <option value="HTTPS">HTTPS — acesso seguro a páginas web</option>
+          <option value="DNS">DNS — resolução de nomes</option>
+          <option value="FTP">FTP — transferência de arquivos</option>
+          <option value="SMTP">SMTP — envio de e-mails</option>
+          <option value="DHCP">DHCP — configuração automática de rede</option>
+        </select>
+
+        <div class="grupo-botoes">
+          <button id="btnIniciar" class="botao-principal">▶ Iniciar transmissão</button>
+          <button id="btnPasso" class="botao-secundario" disabled>Próximo passo</button>
+          <button id="btnReiniciar" class="botao-secundario">↻ Reiniciar</button>
+        </div>
+
+        <label class="alternador">
+          <input type="checkbox" id="modoAutomatico">
+          <span>Executar automaticamente</span>
+        </label>
+
+        <div class="velocidade">
+          <label for="velocidade">Velocidade da animação</label>
+          <input id="velocidade" type="range" min="400" max="2200" step="200" value="1200">
+          <span id="textoVelocidade">Normal</span>
+        </div>
+      </div>
+
+      <div class="painel simulacao">
+        <div class="cabecalho-simulacao">
+          <div>
+            <h2>2. Transmissão em camadas</h2>
+            <p id="status">Aguardando o início da simulação.</p>
+          </div>
+          <div class="progresso">
+            <div id="barraProgresso"></div>
+          </div>
+        </div>
+
+        <div class="rede-visual">
+          <div class="host">
+            <h3>Computador de origem</h3>
+            <div id="pilhaOrigem" class="pilha"></div>
+          </div>
+
+          <div class="meio">
+            <div class="linha-rede"></div>
+            <div id="pacoteViajante" class="pacote-viajante">Bits</div>
+            <div class="equipamentos">
+              <span>💻</span>
+              <span>🔀 Switch</span>
+              <span>🌐 Roteador</span>
+              <span>🖥️</span>
+            </div>
+          </div>
+
+          <div class="host">
+            <h3>Computador de destino</h3>
+            <div id="pilhaDestino" class="pilha"></div>
+          </div>
+        </div>
+
+        <div class="detalhes-camada">
+          <div class="numero-camada" id="numeroCamada">—</div>
+          <div>
+            <h3 id="nomeCamada">Selecione uma camada</h3>
+            <p id="descricaoCamada">
+              Clique em uma das camadas para visualizar sua função, exemplos de protocolos e unidade de dados.
+            </p>
+            <div class="chips">
+              <span id="chipPdu">PDU: —</span>
+              <span id="chipProtocolos">Protocolos: —</span>
+              <span id="chipEquipamento">Equipamento: —</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="painel log-painel">
+      <div class="titulo-com-acao">
+        <div>
+          <h2>3. Diário da transmissão</h2>
+          <p>Acompanhe o que acontece em cada etapa.</p>
+        </div>
+        <button id="btnLimparLog" class="botao-secundario">Limpar diário</button>
+      </div>
+      <div id="log" class="log" aria-live="polite">
+        <div class="linha-log neutra">O diário ainda está vazio.</div>
+      </div>
+    </section>
+
+    <section class="painel desafio">
+      <div class="titulo-com-acao">
+        <div>
+          <p class="tag">ATIVIDADE</p>
+          <h2>Desafio: qual é a camada?</h2>
+          <p id="perguntaDesafio">Clique em “Nova pergunta” para começar.</p>
+        </div>
+        <div class="placar">
+          <strong id="acertos">0</strong>
+          <span>acertos</span>
+        </div>
+      </div>
+
+      <div id="opcoesDesafio" class="opcoes-desafio"></div>
+      <div class="grupo-botoes">
+        <button id="btnNovaPergunta" class="botao-principal">Nova pergunta</button>
+        <button id="btnReiniciarPlacar" class="botao-secundario">Zerar placar</button>
+      </div>
+      <p id="feedback" class="feedback"></p>
+    </section>
+
+    <section class="painel tabela-resumo">
+      <h2>Resumo das sete camadas</h2>
+      <div class="tabela-responsiva">
+        <table>
+          <thead>
+            <tr>
+              <th>Camada</th>
+              <th>Nome</th>
+              <th>Função principal</th>
+              <th>PDU</th>
+              <th>Exemplos</th>
+            </tr>
+          </thead>
+          <tbody id="corpoTabela"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Material didático interativo — Modelo OSI em Camadas</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

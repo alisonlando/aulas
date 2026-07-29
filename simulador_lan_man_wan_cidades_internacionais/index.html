@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>Simulador LAN, MAN e WAN</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">Redes de Computadores</p>
+        <h1>Simulador LAN, MAN e WAN</h1>
+        <p class="subtitle">
+          Explore redes locais, metropolitanas e internacionais, envie pacotes e observe como a comunicação acontece.
+        </p>
+      </div>
+      <div class="status-pill">
+        <span class="status-dot"></span>
+        Simulador ativo
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="control-panel card">
+        <h2>1. Escolha o tipo de rede</h2>
+
+        <div class="network-tabs" role="tablist">
+          <button class="network-tab active" data-network="LAN">LAN</button>
+          <button class="network-tab" data-network="MAN">MAN</button>
+          <button class="network-tab" data-network="WAN">WAN</button>
+        </div>
+
+        <div class="info-box">
+          <div class="info-icon" id="infoIcon">🏫</div>
+          <div>
+            <h3 id="networkTitle">LAN — Rede Local</h3>
+            <p id="networkDescription">
+              Conecta dispositivos em uma área pequena, como uma sala, laboratório, casa ou empresa.
+            </p>
+          </div>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric">
+            <span>Área</span>
+            <strong id="metricArea">Prédio</strong>
+          </div>
+          <div class="metric">
+            <span>Latência</span>
+            <strong id="metricLatency">1–5 ms</strong>
+          </div>
+          <div class="metric">
+            <span>Equipamento</span>
+            <strong id="metricDevice">Switch</strong>
+          </div>
+          <div class="metric">
+            <span>Exemplo</span>
+            <strong id="metricExample">Laboratório</strong>
+          </div>
+        </div>
+
+        <h2>2. Simule o envio de dados</h2>
+
+        <label for="sourceSelect">Origem</label>
+        <select id="sourceSelect"></select>
+
+        <label for="destinationSelect">Destino</label>
+        <select id="destinationSelect"></select>
+
+        <div class="button-row">
+          <button id="sendPacketBtn" class="primary-btn">Enviar pacote</button>
+          <button id="resetBtn" class="secondary-btn">Reiniciar</button>
+        </div>
+
+        <div class="simulation-result" id="simulationResult">
+          Selecione a origem e o destino para iniciar.
+        </div>
+      </section>
+
+      <section class="simulation-panel card">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Visualização da topologia</p>
+            <h2 id="topologyTitle">Rede LAN</h2>
+          </div>
+          <span class="legend">
+            <span class="packet-dot"></span>
+            O pacote salta entre os dispositivos
+          </span>
+        </div>
+
+        <div id="topology" class="topology lan-topology" aria-label="Topologia da rede">
+          <!-- preenchido pelo JavaScript -->
+        </div>
+
+        <div class="event-log">
+          <div class="log-header">
+            <h3>Registro da simulação</h3>
+            <button id="clearLogBtn">Limpar</button>
+          </div>
+          <div id="logContent" class="log-content">
+            <p><span>●</span> Selecione um cenário e envie um pacote.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="challenge-panel card">
+        <div>
+          <p class="eyebrow">Desafio rápido</p>
+          <h2>Qual tipo de rede está sendo descrito?</h2>
+          <p id="challengeQuestion">
+            Uma rede conecta os computadores de um laboratório dentro da mesma universidade.
+          </p>
+        </div>
+
+        <div class="challenge-options">
+          <button data-answer="LAN">LAN</button>
+          <button data-answer="MAN">MAN</button>
+          <button data-answer="WAN">WAN</button>
+        </div>
+
+        <p id="challengeFeedback" class="challenge-feedback"></p>
+        <button id="nextChallengeBtn" class="secondary-btn">Nova pergunta</button>
+      </section>
+    </main>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
