@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador da Resistência Elétrica</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(15, 31, 52, 0.92);
+      --panel-2: #102642;
+      --text: #eef6ff;
+      --muted: #9eb3c9;
+      --accent: #36c5f0;
+      --accent-2: #ffd166;
+      --good: #62e6a7;
+      --border: rgba(255,255,255,.11);
+      --shadow: 0 18px 50px rgba(0,0,0,.32);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 15% 10%, rgba(54,197,240,.18), transparent 28%),
+        radial-gradient(circle at 90% 20%, rgba(255,209,102,.12), transparent 25%),
+        linear-gradient(145deg, #050b14, var(--bg));
+      color: var(--text);
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    header {
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.7rem, 4vw, 2.8rem);
+      letter-spacing: -.03em;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(300px, .9fr) minmax(340px, 1.1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(20,44,72,.96), rgba(10,25,44,.96));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .controls {
+      padding: 22px;
+    }
+
+    .formula {
+      display: grid;
+      place-items: center;
+      min-height: 118px;
+      margin-bottom: 20px;
+      border-radius: 18px;
+      background: rgba(3, 11, 21, .48);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .formula-main {
+      font-family: Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3.3rem);
+      font-weight: 700;
+    }
+
+    .formula-main span { color: var(--accent-2); }
+
+    .formula-legend {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    .control {
+      margin: 18px 0;
+    }
+
+    .control-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 9px;
+    }
+
+    label {
+      font-weight: 700;
+    }
+
+    .value-box {
+      min-width: 112px;
+      text-align: right;
+      color: var(--accent-2);
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px 13px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #091a2e;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .rho-box {
+      margin-top: 9px;
+      padding: 10px 12px;
+      border-radius: 11px;
+      color: var(--muted);
+      background: rgba(255,255,255,.045);
+      font-size: .92rem;
+    }
+
+    .result {
+      margin-top: 22px;
+      padding: 18px;
+      border-radius: 17px;
+      background: linear-gradient(135deg, rgba(54,197,240,.14), rgba(98,230,167,.09));
+      border: 1px solid rgba(54,197,240,.28);
+    }
+
+    .result-label {
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .result-value {
+      margin-top: 3px;
+      font-size: clamp(2rem, 6vw, 3.5rem);
+      line-height: 1;
+      font-weight: 900;
+      color: var(--good);
+      overflow-wrap: anywhere;
+    }
+
+    .calculation {
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-family: "Courier New", monospace;
+      font-size: .9rem;
+      line-height: 1.55;
+      overflow-wrap: anywhere;
+    }
+
+    .visual {
+      min-height: 580px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .visual-stage {
+      position: relative;
+      flex: 1;
+      min-height: 360px;
+      padding: 32px 24px 22px;
+      display: grid;
+      align-content: center;
+      background:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    .wire-wrap {
+      width: 100%;
+      display: grid;
+      place-items: center;
+    }
+
+    .wire {
+      position: relative;
+      width: 78%;
+      min-width: 130px;
+      max-width: 650px;
+      height: 34px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, #ffd58a, #b87333 50%, #7e421c);
+      box-shadow:
+        inset 0 4px 5px rgba(255,255,255,.28),
+        inset 0 -5px 7px rgba(0,0,0,.35),
+        0 10px 25px rgba(0,0,0,.32);
+      transition: width .25s ease, height .25s ease, background .25s ease;
+    }
+
+    .wire::before,
+    .wire::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 18px;
+      height: 160%;
+      transform: translateY(-50%);
+      border-radius: 5px;
+      background: #dce7f3;
+      box-shadow: inset 0 0 0 3px #899cb0;
+    }
+
+    .wire::before { left: -9px; }
+    .wire::after { right: -9px; }
+
+    .dimension {
+      position: relative;
+      width: 78%;
+      margin: 34px auto 0;
+      border-top: 2px solid var(--accent);
+      color: var(--accent);
+      text-align: center;
+      transition: width .25s ease;
+    }
+
+    .dimension::before,
+    .dimension::after {
+      content: "";
+      position: absolute;
+      top: -7px;
+      width: 11px;
+      height: 11px;
+      border-top: 2px solid var(--accent);
+      border-right: 2px solid var(--accent);
+    }
+
+    .dimension::before {
+      left: 0;
+      transform: rotate(-135deg);
+    }
+
+    .dimension::after {
+      right: 0;
+      transform: rotate(45deg);
+    }
+
+    .dimension span {
+      position: relative;
+      top: 8px;
+      padding: 0 9px;
+      background: #0d223b;
+      font-weight: 800;
+    }
+
+    .cross-section {
+      position: absolute;
+      right: 30px;
+      bottom: 28px;
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      border: 7px solid rgba(255,255,255,.16);
+      background: radial-gradient(circle at 35% 30%, #ffdda3, #b87333 48%, #6b3515 76%);
+      box-shadow: inset 0 0 18px rgba(0,0,0,.25), 0 14px 30px rgba(0,0,0,.28);
+      transition: width .25s ease, height .25s ease, background .25s ease;
+    }
+
+    .cross-section-text {
+      text-align: center;
+      font-weight: 900;
+      text-shadow: 0 2px 3px rgba(0,0,0,.5);
+    }
+
+    .cross-section-text small {
+      display: block;
+      margin-top: 4px;
+      color: #fff4df;
+    }
+
+    .explanation {
+      padding: 18px 22px 22px;
+      border-top: 1px solid var(--border);
+      background: rgba(4,13,24,.45);
+    }
+
+    .relation-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .relation {
+      padding: 12px;
+      border-radius: 13px;
+      background: rgba(255,255,255,.045);
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.4;
+    }
+
+    .relation strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .increase { color: var(--accent-2); }
+    .decrease { color: var(--good); }
+
+    .note {
+      margin-top: 13px;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+      .visual { min-height: 500px; }
+      .cross-section {
+        position: relative;
+        right: auto;
+        bottom: auto;
+        margin: 55px auto 0;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .page { width: min(100% - 18px, 1180px); padding-top: 16px; }
+      .controls { padding: 16px; }
+      .visual-stage { padding: 22px 14px; }
+      .relation-grid { grid-template-columns: 1fr; }
+      .control-top { align-items: flex-start; }
+      .value-box { min-width: 92px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>Simulador da Resistência Elétrica</h1>
+      <p class="subtitle">
+        Altere o material, o comprimento e a área da seção transversal do condutor
+        para observar como a resistência elétrica varia.
+      </p>
+    </header>
+
+    <section class="layout">
+      <article class="card controls">
+        <div class="formula">
+          <div>
+            <div class="formula-main">R = <span>ρ</span> · L / A</div>
+            <div class="formula-legend">
+              Resistência = resistividade × comprimento ÷ área
+            </div>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="material">Material do condutor</label>
+          </div>
+          <select id="material">
+            <option value="1.68e-8" data-color="#b87333">Cobre — 1,68 × 10⁻⁸ Ω·m</option>
+            <option value="2.82e-8" data-color="#c7d0d9">Alumínio — 2,82 × 10⁻⁸ Ω·m</option>
+            <option value="1.59e-8" data-color="#d9dde2">Prata — 1,59 × 10⁻⁸ Ω·m</option>
+            <option value="2.44e-8" data-color="#d6a400">Ouro — 2,44 × 10⁻⁸ Ω·m</option>
+            <option value="9.71e-8" data-color="#9a9a9a">Ferro — 9,71 × 10⁻⁸ Ω·m</option>
+            <option value="1.10e-6" data-color="#aeb4ba">Nicromo — 1,10 × 10⁻⁶ Ω·m</option>
+          </select>
+          <div class="rho-box" id="rhoText">ρ = 1,68 × 10⁻⁸ Ω·m</div>
+        </div>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="length">Comprimento do condutor (L)</label>
+            <div class="value-box" id="lengthValue">10,0 m</div>
+          </div>
+          <input id="length" type="range" min="0.5" max="100" step="0.5" value="10" />
+        </div>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="area">Área da seção (A)</label>
+            <div class="value-box" id="areaValue">2,50 mm²</div>
+          </div>
+          <input id="area" type="range" min="0.5" max="50" step="0.5" value="2.5" />
+        </div>
+
+        <div class="result">
+          <div class="result-label">Resistência calculada</div>
+          <div class="result-value" id="result">0,0672 Ω</div>
+          <div class="calculation" id="calculation"></div>
+        </div>
+      </article>
+
+      <article class="card visual">
+        <div class="visual-stage">
+          <div class="wire-wrap">
+            <div class="wire" id="wire"></div>
+            <div class="dimension" id="dimension">
+              <span id="dimensionText">L = 10,0 m</span>
+            </div>
+          </div>
+
+          <div class="cross-section" id="crossSection">
+            <div class="cross-section-text">
+              Seção
+              <small id="crossText">A = 2,50 mm²</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="explanation">
+          <div class="relation-grid">
+            <div class="relation">
+              <strong>Comprimento ↑</strong>
+              A resistência <span class="increase">aumenta</span>.
+            </div>
+            <div class="relation">
+              <strong>Área ↑</strong>
+              A resistência <span class="decrease">diminui</span>.
+            </div>
+            <div class="relation">
+              <strong>Resistividade ↑</strong>
+              A resistência <span class="increase">aumenta</span>.
+            </div>
+          </div>
+          <div class="note">
+            Os valores de resistividade são aproximados para materiais a 20 °C.
+            A área informada em mm² é convertida automaticamente para m².
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const material = document.getElementById('material');
+    const lengthInput = document.getElementById('length');
+    const areaInput = document.getElementById('area');
+
+    const lengthValue = document.getElementById('lengthValue');
+    const areaValue = document.getElementById('areaValue');
+    const rhoText = document.getElementById('rhoText');
+    const result = document.getElementById('result');
+    const calculation = document.getElementById('calculation');
+    const wire = document.getElementById('wire');
+    const dimension = document.getElementById('dimension');
+    const dimensionText = document.getElementById('dimensionText');
+    const crossSection = document.getElementById('crossSection');
+    const crossText = document.getElementById('crossText');
+
+    const formatNumber = (value, digits = 2) =>
+      value.toLocaleString('pt-BR', {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+
+    function scientificPt(value) {
+      if (value === 0) return '0';
+      const exponent = Math.floor(Math.log10(Math.abs(value)));
+      const mantissa = value / Math.pow(10, exponent);
+      const superscript = String(exponent)
+        .replace('-', '⁻')
+        .replaceAll('0','⁰').replaceAll('1','¹').replaceAll('2','²')
+        .replaceAll('3','³').replaceAll('4','⁴').replaceAll('5','⁵')
+        .replaceAll('6','⁶').replaceAll('7','⁷').replaceAll('8','⁸')
+        .replaceAll('9','⁹');
+      return `${formatNumber(mantissa, 2)} × 10${superscript}`;
+    }
+
+    function formatResistance(value) {
+      if (value >= 1000) return `${formatNumber(value / 1000, 3)} kΩ`;
+      if (value >= 1) return `${formatNumber(value, 4)} Ω`;
+      if (value >= 0.001) return `${formatNumber(value * 1000, 3)} mΩ`;
+      return `${formatNumber(value * 1000000, 2)} µΩ`;
+    }
+
+    function update() {
+      const rho = Number(material.value);
+      const lengthM = Number(lengthInput.value);
+      const areaMm2 = Number(areaInput.value);
+      const areaM2 = areaMm2 * 1e-6;
+      const resistance = rho * lengthM / areaM2;
+
+      const option = material.options[material.selectedIndex];
+      const color = option.dataset.color;
+
+      lengthValue.textContent = `${formatNumber(lengthM, 1)} m`;
+      areaValue.textContent = `${formatNumber(areaMm2, 2)} mm²`;
+      rhoText.textContent = `ρ = ${scientificPt(rho)} Ω·m`;
+      result.textContent = formatResistance(resistance);
+
+      calculation.innerHTML =
+        `R = ρ · L / A<br>` +
+        `R = (${scientificPt(rho)}) · ${formatNumber(lengthM, 1)} / ` +
+        `(${scientificPt(areaM2)})<br>` +
+        `R = ${resistance.toExponential(4).replace('.', ',')} Ω`;
+
+      const widthPct = 38 + ((lengthM - 0.5) / 99.5) * 55;
+      wire.style.width = `${widthPct}%`;
+      dimension.style.width = `${widthPct}%`;
+
+      const thickness = 14 + Math.sqrt(areaMm2 / 50) * 48;
+      wire.style.height = `${thickness}px`;
+
+      const sectionSize = 82 + Math.sqrt(areaMm2 / 50) * 100;
+      crossSection.style.width = `${sectionSize}px`;
+      crossSection.style.height = `${sectionSize}px`;
+
+      wire.style.background =
+        `linear-gradient(180deg, color-mix(in srgb, ${color}, white 45%), ${color} 50%, color-mix(in srgb, ${color}, black 42%))`;
+      crossSection.style.background =
+        `radial-gradient(circle at 35% 30%, color-mix(in srgb, ${color}, white 48%), ${color} 48%, color-mix(in srgb, ${color}, black 45%) 76%)`;
+
+      dimensionText.textContent = `L = ${formatNumber(lengthM, 1)} m`;
+      crossText.textContent = `A = ${formatNumber(areaMm2, 2)} mm²`;
+    }
+
+    material.addEventListener('change', update);
+    lengthInput.addEventListener('input', update);
+    areaInput.addEventListener('input', update);
+
+    update();
+  </script>
+</body>
+</html>
