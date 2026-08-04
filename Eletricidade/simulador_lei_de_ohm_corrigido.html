@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador da Lei de Ohm</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(14, 31, 52, 0.96);
+      --panel-dark: rgba(5, 15, 28, 0.75);
+      --text: #eef6ff;
+      --muted: #9fb3c9;
+      --accent: #3ec6f2;
+      --accent2: #ffd166;
+      --green: #62e6a7;
+      --red: #ff6b6b;
+      --border: rgba(255, 255, 255, 0.11);
+      --shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(62, 198, 242, 0.18), transparent 28%),
+        radial-gradient(circle at 90% 15%, rgba(255, 209, 102, 0.12), transparent 25%),
+        linear-gradient(145deg, #040a13, var(--bg));
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 40px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.8rem, 4vw, 2.9rem);
+      letter-spacing: -0.035em;
+    }
+
+    .subtitle {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(310px, 0.9fr) minmax(360px, 1.1fr);
+      gap: 18px;
+    }
+
+    .card {
+      border-radius: 22px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(20, 44, 72, 0.96), rgba(9, 24, 43, 0.96));
+      box-shadow: var(--shadow);
+    }
+
+    .controls {
+      padding: 22px;
+    }
+
+    .formula-box {
+      min-height: 132px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: var(--panel-dark);
+      margin-bottom: 20px;
+    }
+
+    .formula {
+      font-family: Georgia, serif;
+      font-size: clamp(2.2rem, 6vw, 3.8rem);
+      font-weight: 800;
+    }
+
+    .formula span {
+      color: var(--accent2);
+    }
+
+    .formula-caption {
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .control {
+      margin: 20px 0;
+    }
+
+    .control-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 9px;
+    }
+
+    label {
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .value {
+      min-width: 110px;
+      text-align: right;
+      color: var(--accent2);
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+    }
+
+    input[type="range"] {
+      width: 100%;
+      cursor: pointer;
+      accent-color: var(--accent);
+    }
+
+    .result {
+      margin-top: 24px;
+      padding: 18px;
+      border-radius: 17px;
+      border: 1px solid rgba(62, 198, 242, 0.28);
+      background: linear-gradient(135deg, rgba(62, 198, 242, 0.14), rgba(98, 230, 167, 0.08));
+    }
+
+    .result-label {
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .result-value {
+      margin-top: 4px;
+      color: var(--green);
+      font-size: clamp(2.2rem, 6vw, 3.7rem);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .calculation {
+      margin-top: 13px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-family: "Courier New", monospace;
+      line-height: 1.6;
+      overflow-wrap: anywhere;
+    }
+
+    .visual {
+      min-height: 600px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage {
+      position: relative;
+      flex: 1;
+      min-height: 430px;
+      padding: 28px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+
+    .circuit {
+      position: relative;
+      width: min(92%, 650px);
+      height: 310px;
+    }
+
+    .wire {
+      position: absolute;
+      background: #d7e6f5;
+      box-shadow: 0 0 8px rgba(62, 198, 242, 0.45);
+    }
+
+    .wire.top {
+      left: 90px;
+      right: 90px;
+      top: 55px;
+      height: 6px;
+    }
+
+    .wire.bottom {
+      left: 90px;
+      right: 90px;
+      bottom: 55px;
+      height: 6px;
+    }
+
+    .wire.left {
+      left: 90px;
+      top: 55px;
+      bottom: 55px;
+      width: 6px;
+    }
+
+    .wire.right {
+      right: 90px;
+      top: 55px;
+      bottom: 55px;
+      width: 6px;
+    }
+
+    .battery {
+      position: absolute;
+      left: 66px;
+      top: 108px;
+      width: 54px;
+      height: 96px;
+      display: grid;
+      place-items: center;
+    }
+
+    .battery::before,
+    .battery::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--accent2);
+      border-radius: 4px;
+    }
+
+    .battery::before {
+      top: 8px;
+      width: 46px;
+      height: 8px;
+    }
+
+    .battery::after {
+      bottom: 8px;
+      width: 25px;
+      height: 8px;
+    }
+
+    .battery-label {
+      position: absolute;
+      left: -2px;
+      top: 101%;
+      width: 60px;
+      text-align: center;
+      font-weight: 900;
+      color: var(--accent2);
+    }
+
+    .resistor {
+      position: absolute;
+      right: 51px;
+      top: 116px;
+      width: 78px;
+      height: 80px;
+      display: grid;
+      place-items: center;
+      z-index: 4;
+    }
+
+    .resistor-symbol {
+      width: 32px;
+      height: 78px;
+      position: relative;
+      z-index: 3;
+      border-radius: 8px;
+      background:
+        linear-gradient(
+          90deg,
+          transparent 0 38%,
+          rgba(10, 25, 43, 0.42) 38% 62%,
+          transparent 62% 100%
+        ),
+        repeating-linear-gradient(
+          135deg,
+          #e2c38d 0 10px,
+          #7f5428 10px 18px
+        );
+      border: 3px solid rgba(255,255,255,0.3);
+      box-shadow: 0 0 18px rgba(255, 209, 102, 0.25);
+      transform: scaleY(1);
+      transition: transform 0.25s ease, filter 0.25s ease;
+    }
+
+    .resistor-label {
+      position: absolute;
+      top: 100%;
+      width: 90px;
+      text-align: center;
+      color: var(--accent2);
+      font-weight: 900;
+    }
+
+    .electron {
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 14px rgba(62, 198, 242, 0.9);
+      /*
+        O percurso passa pelo centro dos fios e atravessa o resistor.
+        O resistor está no lado direito do circuito, entre y = 116 e y = 196.
+      */
+      offset-path: path("M 92 58 H 560 V 252 H 92 V 58");
+      offset-rotate: 0deg;
+      animation: move 5s linear infinite;
+      z-index: 5;
+    }
+
+    .electron.e2 { animation-delay: -1s; }
+    .electron.e3 { animation-delay: -2s; }
+    .electron.e4 { animation-delay: -3s; }
+    .electron.e5 { animation-delay: -4s; }
+
+    @keyframes move {
+      from { offset-distance: 0%; }
+      to { offset-distance: 100%; }
+    }
+
+    .current-arrow {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--green);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .arrow-line {
+      width: 140px;
+      height: 4px;
+      margin: 6px auto 0;
+      background: var(--green);
+      position: relative;
+      border-radius: 999px;
+    }
+
+    .arrow-line::after {
+      content: "";
+      position: absolute;
+      right: -2px;
+      top: -6px;
+      width: 13px;
+      height: 13px;
+      border-top: 4px solid var(--green);
+      border-right: 4px solid var(--green);
+      transform: rotate(45deg);
+    }
+
+    .meters {
+      position: absolute;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .meter {
+      min-width: 135px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(4, 13, 24, 0.78);
+      border: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .meter small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .meter strong {
+      font-size: 1.15rem;
+      color: var(--text);
+    }
+
+    .explanation {
+      padding: 18px 22px 22px;
+      border-top: 1px solid var(--border);
+      background: rgba(4, 13, 24, 0.48);
+    }
+
+    .relations {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .relation {
+      padding: 12px;
+      border-radius: 13px;
+      background: rgba(255,255,255,0.045);
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.9rem;
+    }
+
+    .relation strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .increase { color: var(--accent2); }
+    .decrease { color: var(--green); }
+
+    @media (max-width: 840px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .visual {
+        min-height: 560px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page {
+        width: min(100% - 18px, 1180px);
+        padding-top: 16px;
+      }
+
+      .controls {
+        padding: 16px;
+      }
+
+      .stage {
+        padding: 15px;
+        min-height: 390px;
+      }
+
+      .circuit {
+        transform: scale(0.78);
+        transform-origin: center;
+      }
+
+      .relations {
+        grid-template-columns: 1fr;
+      }
+
+      .control-top {
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>Simulador da Lei de Ohm</h1>
+      <p class="subtitle">
+        Modifique a tensão e a resistência para observar como a corrente elétrica
+        varia em um circuito resistivo.
+      </p>
+    </header>
+
+    <section class="layout">
+      <article class="card controls">
+        <div class="formula-box">
+          <div>
+            <div class="formula">I = <span>V</span> / R</div>
+            <div class="formula-caption">
+              Corrente = tensão ÷ resistência
+            </div>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="voltage">Tensão elétrica (V)</label>
+            <div class="value" id="voltageValue">12,0 V</div>
+          </div>
+          <input id="voltage" type="range" min="0" max="240" step="1" value="12">
+        </div>
+
+        <div class="control">
+          <div class="control-top">
+            <label for="resistance">Resistência elétrica (R)</label>
+            <div class="value" id="resistanceValue">10,0 Ω</div>
+          </div>
+          <input id="resistance" type="range" min="1" max="1000" step="1" value="10">
+        </div>
+
+        <div class="result">
+          <div class="result-label">Corrente elétrica calculada</div>
+          <div class="result-value" id="currentResult">1,20 A</div>
+          <div class="calculation" id="calculation"></div>
+        </div>
+      </article>
+
+      <article class="card visual">
+        <div class="stage">
+          <div class="circuit">
+            <div class="current-arrow">
+              Corrente convencional
+              <div class="arrow-line"></div>
+            </div>
+
+            <div class="wire top"></div>
+            <div class="wire bottom"></div>
+            <div class="wire left"></div>
+            <div class="wire right"></div>
+
+            <div class="battery">
+              <div class="battery-label" id="batteryLabel">12,0 V</div>
+            </div>
+
+            <div class="resistor">
+              <div class="resistor-symbol" id="resistorSymbol"></div>
+              <div class="resistor-label" id="resistorLabel">10,0 Ω</div>
+            </div>
+
+            <div class="electron"></div>
+            <div class="electron e2"></div>
+            <div class="electron e3"></div>
+            <div class="electron e4"></div>
+            <div class="electron e5"></div>
+
+            <div class="meters">
+              <div class="meter">
+                <small>Tensão</small>
+                <strong id="meterVoltage">12,0 V</strong>
+              </div>
+              <div class="meter">
+                <small>Resistência</small>
+                <strong id="meterResistance">10,0 Ω</strong>
+              </div>
+              <div class="meter">
+                <small>Corrente</small>
+                <strong id="meterCurrent">1,20 A</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="explanation">
+          <div class="relations">
+            <div class="relation">
+              <strong>Tensão ↑</strong>
+              Mantendo R constante, a corrente
+              <span class="increase">aumenta</span>.
+            </div>
+            <div class="relation">
+              <strong>Resistência ↑</strong>
+              Mantendo V constante, a corrente
+              <span class="decrease">diminui</span>.
+            </div>
+            <div class="relation">
+              <strong>Corrente</strong>
+              Representa a quantidade de carga que atravessa o circuito por segundo.
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const voltageInput = document.getElementById("voltage");
+    const resistanceInput = document.getElementById("resistance");
+
+    const voltageValue = document.getElementById("voltageValue");
+    const resistanceValue = document.getElementById("resistanceValue");
+    const currentResult = document.getElementById("currentResult");
+    const calculation = document.getElementById("calculation");
+
+    const batteryLabel = document.getElementById("batteryLabel");
+    const resistorLabel = document.getElementById("resistorLabel");
+    const resistorSymbol = document.getElementById("resistorSymbol");
+
+    const meterVoltage = document.getElementById("meterVoltage");
+    const meterResistance = document.getElementById("meterResistance");
+    const meterCurrent = document.getElementById("meterCurrent");
+
+    const electrons = document.querySelectorAll(".electron");
+
+    function format(value, digits = 1) {
+      return value.toLocaleString("pt-BR", {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits
+      });
+    }
+
+    function formatCurrent(value) {
+      if (value >= 1) {
+        return `${format(value, 2)} A`;
+      }
+
+      if (value >= 0.001) {
+        return `${format(value * 1000, 2)} mA`;
+      }
+
+      return `${format(value * 1000000, 2)} µA`;
+    }
+
+    function update() {
+      const voltage = Number(voltageInput.value);
+      const resistance = Number(resistanceInput.value);
+      const current = voltage / resistance;
+
+      voltageValue.textContent = `${format(voltage, 1)} V`;
+      resistanceValue.textContent = `${format(resistance, 1)} Ω`;
+      currentResult.textContent = formatCurrent(current);
+
+      batteryLabel.textContent = `${format(voltage, 1)} V`;
+      resistorLabel.textContent = `${format(resistance, 1)} Ω`;
+
+      meterVoltage.textContent = `${format(voltage, 1)} V`;
+      meterResistance.textContent = `${format(resistance, 1)} Ω`;
+      meterCurrent.textContent = formatCurrent(current);
+
+      calculation.innerHTML =
+        `I = V / R<br>` +
+        `I = ${format(voltage, 1)} / ${format(resistance, 1)}<br>` +
+        `I = ${format(current, 4)} A`;
+
+      const normalizedCurrent = Math.min(current / 10, 1);
+      const duration = 7 - normalizedCurrent * 5.5;
+
+      electrons.forEach((electron) => {
+        electron.style.animationDuration = `${duration}s`;
+        electron.style.opacity = voltage === 0 ? "0.2" : "1";
+      });
+
+      const resistorScale = 0.85 + Math.min(resistance / 1000, 1) * 0.45;
+      resistorSymbol.style.transform = `scaleY(${resistorScale})`;
+
+      const brightness = Math.max(0.6, 1 - normalizedCurrent * 0.35);
+      resistorSymbol.style.filter = `brightness(${brightness})`;
+    }
+
+    voltageInput.addEventListener("input", update);
+    resistanceInput.addEventListener("input", update);
+
+    update();
+  </script>
+</body>
+</html>

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulador de Valor RMS</title>
+  <style>
+    :root{
+      --bg:#eef3f8;
+      --card:#ffffff;
+      --text:#172033;
+      --muted:#64748b;
+      --primary:#2563eb;
+      --primary-dark:#1d4ed8;
+      --accent:#f59e0b;
+      --success:#0f9f6e;
+      --danger:#dc2626;
+      --border:#dbe3ee;
+      --grid:#d7e0ec;
+      --shadow:0 14px 40px rgba(15,23,42,.10);
+      --radius:18px;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(37,99,235,.10), transparent 28%),
+        linear-gradient(180deg,#f8fafc 0%,var(--bg) 100%);
+      min-height:100vh;
+    }
+
+    .page{
+      width:min(1180px,94%);
+      margin:0 auto;
+      padding:28px 0 40px;
+    }
+
+    header{
+      background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);
+      color:white;
+      border-radius:24px;
+      padding:28px;
+      box-shadow:var(--shadow);
+      margin-bottom:22px;
+    }
+
+    header h1{
+      margin:0 0 8px;
+      font-size:clamp(1.8rem,4vw,3rem);
+      line-height:1.05;
+    }
+
+    header p{
+      margin:0;
+      max-width:850px;
+      color:#dbeafe;
+      font-size:1.02rem;
+      line-height:1.6;
+    }
+
+    .layout{
+      display:grid;
+      grid-template-columns:330px 1fr;
+      gap:20px;
+      align-items:start;
+    }
+
+    .card{
+      background:rgba(255,255,255,.94);
+      border:1px solid rgba(219,227,238,.9);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+    }
+
+    .controls{
+      padding:20px;
+      position:sticky;
+      top:16px;
+    }
+
+    .controls h2,.visual h2,.explanation h2{
+      margin:0 0 16px;
+      font-size:1.18rem;
+    }
+
+    .control{
+      margin-bottom:18px;
+    }
+
+    .control label{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-weight:700;
+      margin-bottom:8px;
+      font-size:.95rem;
+    }
+
+    .value-badge{
+      background:#eff6ff;
+      color:var(--primary-dark);
+      border:1px solid #bfdbfe;
+      padding:3px 8px;
+      border-radius:999px;
+      font-size:.84rem;
+      white-space:nowrap;
+    }
+
+    select,input[type="number"]{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:11px;
+      background:white;
+      color:var(--text);
+      padding:11px 12px;
+      font-size:1rem;
+      outline:none;
+    }
+
+    select:focus,input[type="number"]:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 0 3px rgba(37,99,235,.14);
+    }
+
+    input[type="range"]{
+      width:100%;
+      accent-color:var(--primary);
+      cursor:pointer;
+    }
+
+    .buttons{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+      margin-top:6px;
+    }
+
+    button{
+      border:0;
+      border-radius:11px;
+      padding:11px 12px;
+      font-weight:800;
+      cursor:pointer;
+      font-size:.95rem;
+      transition:.18s ease;
+    }
+
+    button:hover{transform:translateY(-1px)}
+    .primary{background:var(--primary);color:white}
+    .primary:hover{background:var(--primary-dark)}
+    .secondary{background:#e2e8f0;color:#1e293b}
+
+    .tip{
+      background:#fff7ed;
+      border:1px solid #fed7aa;
+      color:#9a3412;
+      border-radius:12px;
+      padding:12px;
+      line-height:1.45;
+      font-size:.88rem;
+      margin-top:16px;
+    }
+
+    .main{
+      display:grid;
+      gap:20px;
+    }
+
+    .visual{
+      padding:20px;
+    }
+
+    .canvas-wrap{
+      position:relative;
+      width:100%;
+      min-height:380px;
+      border-radius:14px;
+      overflow:hidden;
+      background:#fbfdff;
+      border:1px solid var(--border);
+    }
+
+    canvas{
+      display:block;
+      width:100%;
+      height:380px;
+    }
+
+    .legend{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px 18px;
+      margin-top:12px;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    .legend span{
+      display:inline-flex;
+      align-items:center;
+      gap:7px;
+    }
+
+    .dot{
+      width:22px;
+      height:4px;
+      border-radius:999px;
+      background:var(--primary);
+    }
+
+    .dot.rms{background:var(--accent)}
+    .dot.neg{background:var(--success)}
+
+    .results{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:14px;
+    }
+
+    .result{
+      padding:17px;
+      min-height:126px;
+    }
+
+    .result .label{
+      color:var(--muted);
+      font-size:.88rem;
+      font-weight:700;
+      margin-bottom:9px;
+    }
+
+    .result .number{
+      font-size:clamp(1.45rem,3vw,2rem);
+      font-weight:900;
+      letter-spacing:-.03em;
+    }
+
+    .result small{
+      display:block;
+      margin-top:7px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+
+    .result.highlight{
+      border:2px solid #fbbf24;
+      background:linear-gradient(180deg,#fffbeb,#fff);
+    }
+
+    .explanation{
+      padding:22px;
+    }
+
+    .formula{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      text-align:center;
+      background:#eff6ff;
+      border:1px solid #bfdbfe;
+      border-radius:15px;
+      padding:19px;
+      font-size:clamp(1.2rem,3vw,1.8rem);
+      font-weight:800;
+      margin:14px 0;
+      overflow-x:auto;
+    }
+
+    .steps{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:12px;
+      margin-top:16px;
+    }
+
+    .step{
+      border:1px solid var(--border);
+      border-radius:13px;
+      padding:14px;
+      background:#f8fafc;
+      line-height:1.45;
+      font-size:.92rem;
+    }
+
+    .step strong{
+      display:block;
+      color:var(--primary-dark);
+      margin-bottom:5px;
+    }
+
+    .heat-box{
+      margin-top:16px;
+      border-radius:14px;
+      padding:16px;
+      background:linear-gradient(135deg,#fff7ed,#fffbeb);
+      border:1px solid #fdba74;
+      color:#7c2d12;
+      line-height:1.55;
+    }
+
+    .status{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    @media (max-width:900px){
+      .layout{grid-template-columns:1fr}
+      .controls{position:static}
+      .results{grid-template-columns:repeat(2,1fr)}
+    }
+
+    @media (max-width:560px){
+      .page{width:min(96%,1180px);padding-top:12px}
+      header{padding:22px 18px;border-radius:18px}
+      .controls,.visual,.explanation{padding:16px}
+      .results{grid-template-columns:1fr}
+      .steps{grid-template-columns:1fr}
+      canvas{height:330px}
+      .canvas-wrap{min-height:330px}
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <h1>Simulador de Valor RMS</h1>
+      <p>
+        Explore como o valor eficaz de uma tensão ou corrente alternada é calculado.
+        O valor RMS representa o valor contínuo equivalente que produziria o mesmo
+        efeito térmico em uma resistência.
+      </p>
+    </header>
+
+    <section class="layout">
+      <aside class="card controls">
+        <h2>Controles da onda</h2>
+
+        <div class="control">
+          <label for="waveType">Forma de onda</label>
+          <select id="waveType">
+            <option value="sine">Senoidal</option>
+            <option value="square">Quadrada simétrica</option>
+            <option value="triangle">Triangular</option>
+            <option value="rectified">Senoidal retificada</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label for="amplitude">
+            Valor de pico
+            <span class="value-badge" id="amplitudeValue">10,0 V</span>
+          </label>
+          <input id="amplitude" type="range" min="1" max="400" step="1" value="10">
+        </div>
+
+        <div class="control">
+          <label for="frequency">
+            Frequência
+            <span class="value-badge" id="frequencyValue">60 Hz</span>
+          </label>
+          <input id="frequency" type="range" min="1" max="120" step="1" value="60">
+        </div>
+
+        <div class="control">
+          <label for="offset">
+            Componente contínua
+            <span class="value-badge" id="offsetValue">0,0 V</span>
+          </label>
+          <input id="offset" type="range" min="-30" max="30" step="0.5" value="0">
+        </div>
+
+        <div class="control">
+          <label for="resistance">
+            Resistência da carga
+            <span class="value-badge" id="resistanceValue">10 Ω</span>
+          </label>
+          <input id="resistance" type="range" min="1" max="100" step="1" value="10">
+        </div>
+
+        <div class="buttons">
+          <button class="primary" id="toggleAnimation">Pausar</button>
+          <button class="secondary" id="reset">Restaurar</button>
+        </div>
+
+        <div class="tip">
+          <strong>Observe:</strong> a frequência altera a rapidez da oscilação, mas
+          não muda o RMS quando a amplitude e a forma da onda permanecem iguais.
+        </div>
+      </aside>
+
+      <div class="main">
+        <section class="card visual">
+          <h2>Representação da tensão no tempo</h2>
+          <div class="canvas-wrap">
+            <canvas id="waveCanvas"></canvas>
+          </div>
+          <div class="legend">
+            <span><i class="dot"></i> Onda instantânea</span>
+            <span><i class="dot rms"></i> +RMS</span>
+            <span><i class="dot neg"></i> −RMS</span>
+          </div>
+          <div class="status" id="statusText"></div>
+        </section>
+
+        <section class="results">
+          <article class="card result">
+            <div class="label">Valor de pico</div>
+            <div class="number" id="peakResult">10,00 V</div>
+            <small>Maior módulo instantâneo da componente alternada.</small>
+          </article>
+
+          <article class="card result highlight">
+            <div class="label">Valor RMS calculado</div>
+            <div class="number" id="rmsResult">7,07 V</div>
+            <small>Raiz quadrada da média dos valores instantâneos ao quadrado.</small>
+          </article>
+
+          <article class="card result">
+            <div class="label">Valor médio</div>
+            <div class="number" id="meanResult">0,00 V</div>
+            <small>Média algébrica da onda durante um período completo.</small>
+          </article>
+
+          <article class="card result">
+            <div class="label">Potência média na carga</div>
+            <div class="number" id="powerResult">5,00 W</div>
+            <small>Calculada por P = V²<sub>RMS</sub>/R.</small>
+          </article>
+        </section>
+
+        <section class="card explanation">
+          <h2>Definição matemática</h2>
+          <p>
+            Para uma função periódica <strong>v(t)</strong>, o valor RMS é:
+          </p>
+
+          <div class="formula">
+            V<sub>RMS</sub> = √[ (1/T) ∫<sub>0</sub><sup>T</sup> v²(t) dt ]
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <strong>1. Elevar ao quadrado</strong>
+              Valores negativos tornam-se positivos e passam a contribuir para o
+              efeito térmico.
+            </div>
+            <div class="step">
+              <strong>2. Calcular a média</strong>
+              Obtém-se a média de todos os valores ao quadrado durante um período.
+            </div>
+            <div class="step">
+              <strong>3. Extrair a raiz</strong>
+              A raiz quadrada devolve o resultado à unidade original, como volts ou amperes.
+            </div>
+          </div>
+
+          <div class="heat-box" id="equivalenceText">
+            Uma tensão alternada de <strong>7,07 V RMS</strong> produz em uma resistência
+            o mesmo aquecimento que uma tensão contínua de <strong>7,07 V</strong>.
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const canvas = document.getElementById("waveCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const waveType = document.getElementById("waveType");
+    const amplitude = document.getElementById("amplitude");
+    const frequency = document.getElementById("frequency");
+    const offset = document.getElementById("offset");
+    const resistance = document.getElementById("resistance");
+
+    const amplitudeValue = document.getElementById("amplitudeValue");
+    const frequencyValue = document.getElementById("frequencyValue");
+    const offsetValue = document.getElementById("offsetValue");
+    const resistanceValue = document.getElementById("resistanceValue");
+
+    const peakResult = document.getElementById("peakResult");
+    const rmsResult = document.getElementById("rmsResult");
+    const meanResult = document.getElementById("meanResult");
+    const powerResult = document.getElementById("powerResult");
+    const equivalenceText = document.getElementById("equivalenceText");
+    const statusText = document.getElementById("statusText");
+
+    const toggleAnimation = document.getElementById("toggleAnimation");
+    const reset = document.getElementById("reset");
+
+    let running = true;
+    let phase = 0;
+    let lastTime = performance.now();
+
+    const pt = new Intl.NumberFormat("pt-BR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+
+    function signalValue(angle, type, amp, dc) {
+      let base = 0;
+
+      switch (type) {
+        case "square":
+          base = Math.sin(angle) >= 0 ? 1 : -1;
+          break;
+        case "triangle":
+          base = (2 / Math.PI) * Math.asin(Math.sin(angle));
+          break;
+        case "rectified":
+          base = Math.abs(Math.sin(angle));
+          break;
+        default:
+          base = Math.sin(angle);
+      }
+
+      return dc + amp * base;
+    }
+
+    function getSamples(count = 6000) {
+      const amp = Number(amplitude.value);
+      const dc = Number(offset.value);
+      const type = waveType.value;
+      const values = [];
+
+      for (let i = 0; i < count; i++) {
+        const angle = 2 * Math.PI * i / count;
+        values.push(signalValue(angle, type, amp, dc));
+      }
+      return values;
+    }
+
+    function calculateMetrics() {
+      const values = getSamples();
+      const n = values.length;
+      const mean = values.reduce((sum, value) => sum + value, 0) / n;
+      const meanSquare = values.reduce((sum, value) => sum + value * value, 0) / n;
+      const rms = Math.sqrt(meanSquare);
+      const peak = Math.max(...values.map(Math.abs));
+      const r = Number(resistance.value);
+      const power = rms * rms / r;
+
+      return { rms, mean, peak, power };
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.round(rect.width * ratio);
+      canvas.height = Math.round(rect.height * ratio);
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function drawGrid(width, height, centerY, scaleY) {
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = "#fbfdff";
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = "#d7e0ec";
+
+      for (let i = 0; i <= 10; i++) {
+        const x = i * width / 10;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, height);
+        ctx.stroke();
+      }
+
+      for (let i = 0; i <= 8; i++) {
+        const y = i * height / 8;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(width, y);
+        ctx.stroke();
+      }
+
+      ctx.strokeStyle = "#64748b";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(width, centerY);
+      ctx.stroke();
+
+      ctx.fillStyle = "#64748b";
+      ctx.font = "12px system-ui";
+      ctx.fillText("0 V", 8, centerY - 7);
+
+      const maxV = Math.round((height / 2) / scaleY);
+      ctx.fillText("+" + maxV + " V", 8, 16);
+      ctx.fillText("−" + maxV + " V", 8, height - 8);
+    }
+
+    function drawHorizontalLevel(value, width, centerY, scaleY, color, label) {
+      const y = centerY - value * scaleY;
+      if (y < 0 || y > canvas.clientHeight) return;
+
+      ctx.save();
+      ctx.setLineDash([8, 7]);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(width, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = color;
+      ctx.font = "700 12px system-ui";
+      ctx.fillText(label, Math.max(8, width - 78), y - 6);
+      ctx.restore();
+    }
+
+    function drawWave() {
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      if (!width || !height) return;
+
+      const metrics = calculateMetrics();
+      const amp = Number(amplitude.value);
+      const dc = Number(offset.value);
+      const freq = Number(frequency.value);
+      const type = waveType.value;
+
+      const maxDisplay = Math.max(
+        5,
+        metrics.peak * 1.22,
+        Math.abs(dc) + amp * 1.22
+      );
+
+      const centerY = height / 2;
+      const scaleY = (height * 0.43) / maxDisplay;
+
+      drawGrid(width, height, centerY, scaleY);
+      drawHorizontalLevel(metrics.rms, width, centerY, scaleY, "#f59e0b", "+RMS");
+      drawHorizontalLevel(-metrics.rms, width, centerY, scaleY, "#0f9f6e", "−RMS");
+
+      ctx.strokeStyle = "#2563eb";
+      ctx.lineWidth = 3;
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.beginPath();
+
+      const cycles = 2.5;
+      for (let x = 0; x <= width; x++) {
+        const normalized = x / width;
+        const angle = normalized * cycles * 2 * Math.PI + phase;
+        const value = signalValue(angle, type, amp, dc);
+        const y = centerY - value * scaleY;
+
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      ctx.fillStyle = "#334155";
+      ctx.font = "12px system-ui";
+      ctx.fillText(`Visualização: ${cycles} períodos | ${freq} Hz`, 10, height - 12);
+    }
+
+    function updateDisplay() {
+      const metrics = calculateMetrics();
+
+      amplitudeValue.textContent = `${pt.format(Number(amplitude.value))} V`;
+      frequencyValue.textContent = `${frequency.value} Hz`;
+      offsetValue.textContent = `${pt.format(Number(offset.value))} V`;
+      resistanceValue.textContent = `${resistance.value} Ω`;
+
+      peakResult.textContent = `${pt.format(metrics.peak)} V`;
+      rmsResult.textContent = `${pt.format(metrics.rms)} V`;
+      meanResult.textContent = `${pt.format(metrics.mean)} V`;
+      powerResult.textContent = `${pt.format(metrics.power)} W`;
+
+      equivalenceText.innerHTML =
+        `Uma tensão alternada de <strong>${pt.format(metrics.rms)} V RMS</strong> ` +
+        `produz em uma resistência o mesmo aquecimento que uma tensão contínua de ` +
+        `<strong>${pt.format(metrics.rms)} V</strong>.`;
+
+      const typeNames = {
+        sine: "senoidal",
+        square: "quadrada simétrica",
+        triangle: "triangular",
+        rectified: "senoidal retificada"
+      };
+
+      let relation = "";
+      if (Number(offset.value) === 0) {
+        if (waveType.value === "sine") relation = "Para senoide: VRMS = Vpico / √2.";
+        if (waveType.value === "square") relation = "Para onda quadrada simétrica: VRMS = Vpico.";
+        if (waveType.value === "triangle") relation = "Para onda triangular: VRMS = Vpico / √3.";
+        if (waveType.value === "rectified") relation = "A retificação não altera o RMS de uma senoide ideal.";
+      } else {
+        relation = "Com componente contínua: VRMS² = VAC,RMS² + VDC².";
+      }
+
+      statusText.textContent =
+        `Forma ${typeNames[waveType.value]}. ${relation}`;
+
+      drawWave();
+    }
+
+    function animate(time) {
+      const dt = Math.min((time - lastTime) / 1000, 0.05);
+      lastTime = time;
+
+      if (running) {
+        const visualSpeed = 0.7 + Number(frequency.value) / 80;
+        phase += dt * visualSpeed * 2 * Math.PI;
+      }
+
+      drawWave();
+      requestAnimationFrame(animate);
+    }
+
+    [waveType, amplitude, frequency, offset, resistance].forEach(control => {
+      control.addEventListener("input", updateDisplay);
+      control.addEventListener("change", updateDisplay);
+    });
+
+    toggleAnimation.addEventListener("click", () => {
+      running = !running;
+      toggleAnimation.textContent = running ? "Pausar" : "Continuar";
+    });
+
+    reset.addEventListener("click", () => {
+      waveType.value = "sine";
+      amplitude.value = 10;
+      frequency.value = 60;
+      offset.value = 0;
+      resistance.value = 10;
+      phase = 0;
+      running = true;
+      toggleAnimation.textContent = "Pausar";
+      updateDisplay();
+    });
+
+    window.addEventListener("resize", () => {
+      resizeCanvas();
+      drawWave();
+    });
+
+    resizeCanvas();
+    updateDisplay();
+    requestAnimationFrame(animate);
+  </script>
+</body>
+</html>
