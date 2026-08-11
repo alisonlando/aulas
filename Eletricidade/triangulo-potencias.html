@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Simulador - Triângulo das Potências</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#f3f6fa;
+    color:#1f2937;
+}
+
+header{
+    background:#16263d;
+    color:white;
+    padding:20px;
+    text-align:center;
+}
+
+header h1{
+    margin:0;
+    font-size:28px;
+}
+
+header p{
+    margin:7px 0 0 0;
+    color:#cbd5e1;
+}
+
+.container{
+    max-width:1200px;
+    margin:auto;
+    padding:20px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:340px 1fr;
+    gap:20px;
+}
+
+.card{
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 3px 12px rgba(0,0,0,.08);
+}
+
+h2{
+    margin-top:0;
+    color:#16263d;
+}
+
+.control{
+    margin-bottom:25px;
+}
+
+.control label{
+    display:flex;
+    justify-content:space-between;
+    font-weight:bold;
+    margin-bottom:8px;
+}
+
+.valor{
+    background:#e8eef5;
+    padding:3px 8px;
+    border-radius:6px;
+}
+
+input[type=range]{
+    width:100%;
+}
+
+.tipo-carga{
+    display:flex;
+    gap:8px;
+    margin-bottom:20px;
+}
+
+.tipo-carga button{
+    flex:1;
+    border:0;
+    padding:10px;
+    border-radius:7px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.indutiva{
+    background:#dbeafe;
+}
+
+.resistiva{
+    background:#dcfce7;
+}
+
+.capacitiva{
+    background:#fef3c7;
+}
+
+.resultados{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:12px;
+    margin-bottom:20px;
+}
+
+.resultado{
+    padding:15px;
+    border-radius:10px;
+    text-align:center;
+    background:#f8fafc;
+    border:1px solid #e2e8f0;
+}
+
+.resultado .simbolo{
+    font-size:18px;
+    font-weight:bold;
+}
+
+.resultado .numero{
+    font-size:26px;
+    font-weight:bold;
+    margin-top:6px;
+}
+
+.resultado small{
+    display:block;
+    margin-top:4px;
+}
+
+.canvas-container{
+    height:430px;
+    position:relative;
+}
+
+canvas{
+    width:100%;
+    height:100%;
+}
+
+.formulas{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+}
+
+.formula{
+    background:#f8fafc;
+    padding:13px;
+    border-radius:8px;
+    text-align:center;
+    font-size:18px;
+}
+
+.explicacao{
+    margin-top:20px;
+    background:#eef4fa;
+    border-left:5px solid #2563eb;
+    padding:15px;
+    border-radius:7px;
+    line-height:1.6;
+}
+
+.fp-barra{
+    height:18px;
+    background:#e5e7eb;
+    border-radius:20px;
+    overflow:hidden;
+    margin-top:10px;
+}
+
+.fp-preenchimento{
+    height:100%;
+    width:100%;
+    background:#22c55e;
+    transition:.3s;
+}
+
+.status{
+    margin-top:8px;
+    font-weight:bold;
+    text-align:center;
+}
+
+@media(max-width:850px){
+
+    .grid{
+        grid-template-columns:1fr;
+    }
+
+    .resultados{
+        grid-template-columns:repeat(2,1fr);
+    }
+
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h1>⚡ Triângulo das Potências</h1>
+
+<p>Potência ativa, reativa, aparente e fator de potência</p>
+
+</header>
+
+<div class="container">
+
+<div class="grid">
+
+<!-- PAINEL DE CONTROLE -->
+
+<div class="card">
+
+<h2>Parâmetros do circuito</h2>
+
+<div class="control">
+
+<label>
+Tensão RMS
+<span class="valor" id="valorV">220 V</span>
+</label>
+
+<input
+type="range"
+id="tensao"
+min="10"
+max="400"
+value="220"
+step="1">
+
+</div>
+
+
+<div class="control">
+
+<label>
+Corrente RMS
+<span class="valor" id="valorI">10 A</span>
+</label>
+
+<input
+type="range"
+id="corrente"
+min="0.5"
+max="30"
+value="10"
+step="0.1">
+
+</div>
+
+
+<div class="control">
+
+<label>
+Ângulo φ
+<span class="valor" id="valorPhi">30°</span>
+</label>
+
+<input
+type="range"
+id="angulo"
+min="-80"
+max="80"
+value="30"
+step="1">
+
+</div>
+
+
+<h3>Exemplos de carga</h3>
+
+<div class="tipo-carga">
+
+<button class="resistiva" onclick="tipoCarga(0)">
+Resistiva
+</button>
+
+<button class="indutiva" onclick="tipoCarga(40)">
+Indutiva
+</button>
+
+<button class="capacitiva" onclick="tipoCarga(-40)">
+Capacitiva
+</button>
+
+</div>
+
+
+<h3>Fator de potência</h3>
+
+<div class="fp-barra">
+
+<div
+class="fp-preenchimento"
+id="barraFP">
+</div>
+
+</div>
+
+<div class="status" id="statusFP">
+Excelente
+</div>
+
+
+<div class="explicacao">
+
+<strong>Observe:</strong><br>
+
+Quando o ângulo φ aumenta, cresce a potência reativa e diminui o fator de potência.
+
+<br><br>
+
+Quando φ = 0°, toda a potência aparente é convertida em potência ativa.
+
+</div>
+
+</div>
+
+
+<!-- TRIÂNGULO -->
+
+<div>
+
+<div class="card">
+
+<h2>Triângulo das Potências</h2>
+
+
+<div class="resultados">
+
+<div class="resultado">
+
+<div class="simbolo">
+P
+</div>
+
+<div class="numero" id="valorP">
+1905
+</div>
+
+<small>Potência ativa (W)</small>
+
+</div>
+
+
+<div class="resultado">
+
+<div class="simbolo">
+Q
+</div>
+
+<div class="numero" id="valorQ">
+1100
+</div>
+
+<small>Potência reativa (var)</small>
+
+</div>
+
+
+<div class="resultado">
+
+<div class="simbolo">
+S
+</div>
+
+<div class="numero" id="valorS">
+2200
+</div>
+
+<small>Potência aparente (VA)</small>
+
+</div>
+
+
+<div class="resultado">
+
+<div class="simbolo">
+FP
+</div>
+
+<div class="numero" id="valorFP">
+0.866
+</div>
+
+<small>Fator de potência</small>
+
+</div>
+
+</div>
+
+
+<div class="canvas-container">
+
+<canvas id="canvas"></canvas>
+
+</div>
+
+</div>
+
+
+<div class="card formulas">
+
+<div class="formula">
+<strong>S = V × I</strong>
+</div>
+
+<div class="formula">
+<strong>P = V × I × cos φ</strong>
+</div>
+
+<div class="formula">
+<strong>Q = V × I × sen φ</strong>
+</div>
+
+<div class="formula">
+<strong>FP = cos φ = P / S</strong>
+</div>
+
+<div class="formula">
+<strong>S² = P² + Q²</strong>
+</div>
+
+<div class="formula">
+<strong>tan φ = Q / P</strong>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const tensao =
+document.getElementById("tensao");
+
+const corrente =
+document.getElementById("corrente");
+
+const angulo =
+document.getElementById("angulo");
+
+const canvas =
+document.getElementById("canvas");
+
+const ctx =
+canvas.getContext("2d");
+
+
+
+function tipoCarga(phi){
+
+    angulo.value = phi;
+
+    atualizar();
+
+}
+
+
+
+function atualizar(){
+
+    let V =
+    parseFloat(tensao.value);
+
+    let I =
+    parseFloat(corrente.value);
+
+    let phi =
+    parseFloat(angulo.value);
+
+    let rad =
+    phi * Math.PI / 180;
+
+
+    let S =
+    V * I;
+
+    let P =
+    S * Math.cos(rad);
+
+    let Q =
+    S * Math.sin(rad);
+
+    let FP =
+    Math.cos(rad);
+
+
+    document.getElementById("valorV").innerText =
+    V.toFixed(0) + " V";
+
+    document.getElementById("valorI").innerText =
+    I.toFixed(1) + " A";
+
+    document.getElementById("valorPhi").innerText =
+    phi.toFixed(0) + "°";
+
+
+    document.getElementById("valorP").innerText =
+    P.toFixed(0);
+
+    document.getElementById("valorQ").innerText =
+    Q.toFixed(0);
+
+    document.getElementById("valorS").innerText =
+    S.toFixed(0);
+
+    document.getElementById("valorFP").innerText =
+    FP.toFixed(3);
+
+
+    atualizarFP(FP);
+
+    desenharTriangulo(P,Q,S,phi);
+
+}
+
+
+
+function atualizarFP(fp){
+
+    const barra =
+    document.getElementById("barraFP");
+
+    const status =
+    document.getElementById("statusFP");
+
+    barra.style.width =
+    (fp*100) + "%";
+
+
+    if(fp >= 0.95){
+
+        barra.style.background="#22c55e";
+
+        status.innerText =
+        "Fator de potência elevado";
+
+    }
+
+    else if(fp >= 0.8){
+
+        barra.style.background="#f59e0b";
+
+        status.innerText =
+        "Fator de potência intermediário";
+
+    }
+
+    else{
+
+        barra.style.background="#ef4444";
+
+        status.innerText =
+        "Fator de potência baixo";
+
+    }
+
+}
+
+
+
+function desenharTriangulo(P,Q,S,phi){
+
+    const rect =
+    canvas.getBoundingClientRect();
+
+    canvas.width =
+    rect.width * devicePixelRatio;
+
+    canvas.height =
+    rect.height * devicePixelRatio;
+
+    ctx.scale(
+        devicePixelRatio,
+        devicePixelRatio
+    );
+
+
+    const w =
+    rect.width;
+
+    const h =
+    rect.height;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        w,
+        h
+    );
+
+
+    const origemX =
+    80;
+
+    const origemY =
+    h/2 + 40;
+
+
+    const comprimentoMax =
+    Math.min(w-180,330);
+
+
+    const escala =
+    comprimentoMax / S;
+
+
+    let PX =
+    origemX + P*escala;
+
+    let QY =
+    origemY - Q*escala;
+
+
+    // eixos pontilhados
+
+    ctx.strokeStyle="#cbd5e1";
+
+    ctx.lineWidth=1;
+
+    ctx.setLineDash([5,5]);
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(origemX,origemY);
+
+    ctx.lineTo(
+        w-40,
+        origemY
+    );
+
+    ctx.stroke();
+
+
+    ctx.setLineDash([]);
+
+
+    // P
+
+    ctx.strokeStyle="#2563eb";
+
+    ctx.lineWidth=8;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        origemX,
+        origemY
+    );
+
+    ctx.lineTo(
+        PX,
+        origemY
+    );
+
+    ctx.stroke();
+
+
+    // Q
+
+    ctx.strokeStyle="#ef4444";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        PX,
+        origemY
+    );
+
+    ctx.lineTo(
+        PX,
+        QY
+    );
+
+    ctx.stroke();
+
+
+    // S
+
+    ctx.strokeStyle="#7c3aed";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        origemX,
+        origemY
+    );
+
+    ctx.lineTo(
+        PX,
+        QY
+    );
+
+    ctx.stroke();
+
+
+    // textos
+
+    ctx.font =
+    "bold 17px Arial";
+
+
+    ctx.fillStyle="#2563eb";
+
+    ctx.fillText(
+
+        "P = " +
+        P.toFixed(0) +
+        " W",
+
+        origemX +
+        (PX-origemX)/2 -
+        40,
+
+        origemY + 30
+
+    );
+
+
+    ctx.fillStyle="#ef4444";
+
+    ctx.fillText(
+
+        "Q = " +
+        Q.toFixed(0) +
+        " var",
+
+        PX + 12,
+
+        (origemY+QY)/2
+
+    );
+
+
+    ctx.fillStyle="#7c3aed";
+
+    ctx.fillText(
+
+        "S = " +
+        S.toFixed(0) +
+        " VA",
+
+        origemX +
+        (PX-origemX)/2 -
+        20,
+
+        (origemY+QY)/2 - 10
+
+    );
+
+
+    // arco do ângulo
+
+    ctx.strokeStyle="#111827";
+
+    ctx.lineWidth=2;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+
+        origemX,
+        origemY,
+
+        45,
+
+        0,
+
+        -phi*Math.PI/180,
+
+        phi>0
+
+    );
+
+    ctx.stroke();
+
+
+    ctx.fillStyle="#111827";
+
+    ctx.fillText(
+
+        "φ = "+
+        phi.toFixed(0)+
+        "°",
+
+        origemX+50,
+
+        origemY-15
+
+    );
+
+
+    // identificação da carga
+
+    ctx.font =
+    "16px Arial";
+
+
+    if(phi > 1){
+
+        ctx.fillStyle="#ef4444";
+
+        ctx.fillText(
+
+            "Carga indutiva → Q > 0",
+
+            origemX,
+            35
+
+        );
+
+    }
+
+    else if(phi < -1){
+
+        ctx.fillStyle="#d97706";
+
+        ctx.fillText(
+
+            "Carga capacitiva → Q < 0",
+
+            origemX,
+            35
+
+        );
+
+    }
+
+    else{
+
+        ctx.fillStyle="#16a34a";
+
+        ctx.fillText(
+
+            "Carga resistiva → Q = 0",
+
+            origemX,
+            35
+
+        );
+
+    }
+
+}
+
+
+tensao.addEventListener(
+    "input",
+    atualizar
+);
+
+corrente.addEventListener(
+    "input",
+    atualizar
+);
+
+angulo.addEventListener(
+    "input",
+    atualizar
+);
+
+
+window.addEventListener(
+    "resize",
+    atualizar
+);
+
+
+atualizar();
+
+</script>
+
+</body>
+</html>
