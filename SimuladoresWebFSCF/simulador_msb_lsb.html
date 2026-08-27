@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de MSB e LSB</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f4f6f8;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin-bottom: 8px;
+      color: #0f172a;
+    }
+
+    .subtitle {
+      margin-top: 0;
+      color: #475569;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .panel {
+      background: white;
+      border: 1px solid #dbe2ea;
+      border-radius: 14px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .bit-area {
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .bits {
+      min-width: 760px;
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .bit-card {
+      text-align: center;
+      border: 2px solid #cbd5e1;
+      border-radius: 12px;
+      padding: 10px;
+      background: #f8fafc;
+      transition: 0.2s;
+    }
+
+    .bit-card.msb {
+      border-color: #dc2626;
+    }
+
+    .bit-card.lsb {
+      border-color: #2563eb;
+    }
+
+    .position {
+      font-size: 0.85rem;
+      color: #64748b;
+      margin-bottom: 5px;
+    }
+
+    .tag {
+      min-height: 24px;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .tag-msb { color: #dc2626; }
+    .tag-lsb { color: #2563eb; }
+
+    .bit-button {
+      width: 100%;
+      min-height: 72px;
+      margin: 7px 0;
+      border: 2px solid #64748b;
+      border-radius: 10px;
+      font-size: 2rem;
+      font-weight: bold;
+      background: white;
+      color: #0f172a;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+
+    .bit-button:hover {
+      background: #e2e8f0;
+    }
+
+    .bit-button.active {
+      background: #0f172a;
+      color: white;
+      border-color: #0f172a;
+    }
+
+    .weight {
+      font-size: 0.85rem;
+      color: #475569;
+      line-height: 1.35;
+    }
+
+    .arrow-row {
+      min-width: 760px;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    .msb-text { color: #dc2626; }
+    .lsb-text { color: #2563eb; }
+
+    .values {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .value-card {
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .value-card .label {
+      font-size: 0.85rem;
+      color: #64748b;
+      text-transform: uppercase;
+    }
+
+    .value-card .value {
+      margin-top: 5px;
+      font-size: 1.7rem;
+      font-weight: bold;
+      font-family: Consolas, monospace;
+      overflow-wrap: anywhere;
+    }
+
+    .concepts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .concept {
+      border-radius: 12px;
+      padding: 18px;
+      line-height: 1.5;
+    }
+
+    .concept-msb {
+      background: #fef2f2;
+      border: 2px solid #fecaca;
+    }
+
+    .concept-lsb {
+      background: #eff6ff;
+      border: 2px solid #bfdbfe;
+    }
+
+    .concept h2 {
+      margin-top: 0;
+    }
+
+    .calculation {
+      font-family: Consolas, monospace;
+      font-size: 1.2rem;
+      background: #0f172a;
+      color: white;
+      padding: 16px;
+      border-radius: 10px;
+      line-height: 1.7;
+      overflow-x: auto;
+    }
+
+    .examples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    button.example,
+    button.reset {
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 16px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button.example {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+
+    button.example:hover {
+      background: #cbd5e1;
+    }
+
+    button.reset {
+      background: #b91c1c;
+      color: white;
+    }
+
+    button.reset:hover {
+      background: #991b1b;
+    }
+
+    .highlight {
+      background: #fffbeb;
+      border: 2px solid #f59e0b;
+      border-radius: 12px;
+      padding: 18px;
+      margin-top: 20px;
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+
+    @media (max-width: 700px) {
+      .container { padding: 14px; }
+      .values, .concepts { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Simulador: MSB e LSB</h1>
+  <p class="subtitle">
+    Clique em cada bit para alternar entre <strong>0</strong> e <strong>1</strong>.
+    Observe o peso de cada posição e descubra por que o bit da esquerda é o
+    <strong>mais significativo</strong> e o da direita é o <strong>menos significativo</strong>.
+  </p>
+
+  <div class="panel">
+    <h2>Palavra binária de 8 bits</h2>
+
+    <div class="bit-area">
+      <div class="bits" id="bits"></div>
+
+      <div class="arrow-row">
+        <span class="msb-text">← Maior peso — MSB</span>
+        <span class="lsb-text">LSB — Menor peso →</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="values">
+      <div class="value-card">
+        <div class="label">Binário</div>
+        <div class="value" id="binaryValue">00000000</div>
+      </div>
+
+      <div class="value-card">
+        <div class="label">Decimal</div>
+        <div class="value" id="decimalValue">0</div>
+      </div>
+
+      <div class="value-card">
+        <div class="label">Hexadecimal</div>
+        <div class="value" id="hexValue">0x00</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="concepts">
+      <div class="concept concept-msb">
+        <h2 class="msb-text">MSB</h2>
+        <p><strong>Most Significant Bit</strong></p>
+        <p>
+          É o bit de <strong>maior peso</strong>. Em uma palavra de 8 bits,
+          ele ocupa a posição <strong>bit 7</strong>.
+        </p>
+        <p>
+          Peso: <strong>2<sup>7</sup> = 128</strong>
+        </p>
+        <p>Estado atual do MSB: <strong id="msbValue">0</strong></p>
+      </div>
+
+      <div class="concept concept-lsb">
+        <h2 class="lsb-text">LSB</h2>
+        <p><strong>Least Significant Bit</strong></p>
+        <p>
+          É o bit de <strong>menor peso</strong>. Em uma palavra binária,
+          ele ocupa a posição <strong>bit 0</strong>.
+        </p>
+        <p>
+          Peso: <strong>2<sup>0</sup> = 1</strong>
+        </p>
+        <p>Estado atual do LSB: <strong id="lsbValue">0</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Como o valor decimal é calculado?</h2>
+    <div class="calculation" id="calculation">
+      0 = 0
+    </div>
+    <p id="explanation">
+      Nenhum bit está ligado.
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>Experimente</h2>
+    <p>Use estes exemplos para comparar o efeito do MSB e do LSB:</p>
+
+    <div class="examples">
+      <button class="example" data-value="1">Somente LSB = 1</button>
+      <button class="example" data-value="128">Somente MSB = 1</button>
+      <button class="example" data-value="129">MSB + LSB</button>
+      <button class="example" data-value="15">00001111</button>
+      <button class="example" data-value="240">11110000</button>
+      <button class="example" data-value="255">Todos os bits = 1</button>
+      <button class="reset" id="reset">Zerar</button>
+    </div>
+  </div>
+
+  <div class="highlight">
+    <strong>Ideia principal:</strong><br>
+    Alterar o <strong class="msb-text">MSB</strong> de 0 para 1 pode adicionar
+    <strong>128</strong> ao número de 8 bits, enquanto alterar o
+    <strong class="lsb-text">LSB</strong> de 0 para 1 adiciona apenas
+    <strong>1</strong>. Por isso, um é chamado de <strong>mais significativo</strong>
+    e o outro de <strong>menos significativo</strong>.
+  </div>
+</div>
+
+<script>
+  const bitsContainer = document.getElementById("bits");
+
+  let bits = [0,0,0,0,0,0,0,0];
+
+  function createBits() {
+    bitsContainer.innerHTML = "";
+
+    for (let position = 7; position >= 0; position--) {
+      const index = 7 - position;
+
+      const card = document.createElement("div");
+      card.className = "bit-card";
+
+      if (position === 7) card.classList.add("msb");
+      if (position === 0) card.classList.add("lsb");
+
+      const tag = document.createElement("div");
+      tag.className = "tag";
+
+      if (position === 7) {
+        tag.textContent = "MSB";
+        tag.classList.add("tag-msb");
+      } else if (position === 0) {
+        tag.textContent = "LSB";
+        tag.classList.add("tag-lsb");
+      } else {
+        tag.innerHTML = "&nbsp;";
+      }
+
+      const positionLabel = document.createElement("div");
+      positionLabel.className = "position";
+      positionLabel.textContent = "Bit " + position;
+
+      const button = document.createElement("button");
+      button.className = "bit-button";
+      button.dataset.index = index;
+      button.textContent = bits[index];
+      button.setAttribute("aria-label", "Alternar bit " + position);
+
+      button.addEventListener("click", () => {
+        bits[index] = bits[index] === 0 ? 1 : 0;
+        update();
+      });
+
+      const weight = document.createElement("div");
+      weight.className = "weight";
+      weight.innerHTML =
+        "Peso<br><strong>2<sup>" +
+        position +
+        "</sup> = " +
+        Math.pow(2, position) +
+        "</strong>";
+
+      card.appendChild(tag);
+      card.appendChild(positionLabel);
+      card.appendChild(button);
+      card.appendChild(weight);
+
+      bitsContainer.appendChild(card);
+    }
+  }
+
+  function update() {
+    const buttons = document.querySelectorAll(".bit-button");
+
+    buttons.forEach((button, index) => {
+      button.textContent = bits[index];
+
+      if (bits[index] === 1) {
+        button.classList.add("active");
+      } else {
+        button.classList.remove("active");
+      }
+    });
+
+    const binary = bits.join("");
+    const decimal = parseInt(binary, 2);
+
+    document.getElementById("binaryValue").textContent = binary;
+    document.getElementById("decimalValue").textContent = decimal;
+    document.getElementById("hexValue").textContent =
+      "0x" + decimal.toString(16).toUpperCase().padStart(2, "0");
+
+    document.getElementById("msbValue").textContent = bits[0];
+    document.getElementById("lsbValue").textContent = bits[7];
+
+    const activeValues = [];
+    const activePowers = [];
+
+    bits.forEach((bit, index) => {
+      if (bit === 1) {
+        const position = 7 - index;
+        activeValues.push(Math.pow(2, position));
+        activePowers.push("2^" + position);
+      }
+    });
+
+    const calculation = document.getElementById("calculation");
+    const explanation = document.getElementById("explanation");
+
+    if (activeValues.length === 0) {
+      calculation.textContent = "0 = 0";
+      explanation.textContent = "Nenhum bit está ligado.";
+    } else {
+      calculation.textContent =
+        activePowers.join(" + ") +
+        " = " +
+        activeValues.join(" + ") +
+        " = " +
+        decimal;
+
+      if (decimal === 1) {
+        explanation.innerHTML =
+          "Somente o <strong>LSB</strong> está ligado. Seu peso é 1.";
+      } else if (decimal === 128) {
+        explanation.innerHTML =
+          "Somente o <strong>MSB</strong> está ligado. Seu peso é 128.";
+      } else if (decimal === 129) {
+        explanation.innerHTML =
+          "O <strong>MSB</strong> contribui com 128 e o <strong>LSB</strong> contribui com 1: <strong>128 + 1 = 129</strong>.";
+      } else {
+        explanation.textContent =
+          "O valor decimal é obtido somando os pesos de todas as posições que possuem bit igual a 1.";
+      }
+    }
+  }
+
+  function setValue(value) {
+    const binary = value.toString(2).padStart(8, "0");
+    bits = binary.split("").map(Number);
+    update();
+  }
+
+  document.querySelectorAll(".example").forEach(button => {
+    button.addEventListener("click", () => {
+      setValue(Number(button.dataset.value));
+    });
+  });
+
+  document.getElementById("reset").addEventListener("click", () => {
+    bits = [0,0,0,0,0,0,0,0];
+    update();
+  });
+
+  createBits();
+  update();
+</script>
+
+</body>
+</html>
