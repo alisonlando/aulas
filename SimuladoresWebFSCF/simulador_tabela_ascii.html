@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador Tabela ASCII</title>
+<style>
+:root{
+  --bg:#f4f7fb;
+  --card:#ffffff;
+  --text:#172033;
+  --muted:#667085;
+  --border:#d7deea;
+  --accent:#2563eb;
+  --accent2:#eaf1ff;
+  --control:#fff6dd;
+  --printable:#edfff2;
+  --shadow:0 10px 30px rgba(16,24,40,.08);
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+header{
+  background:linear-gradient(135deg,#183b8c,#2563eb);
+  color:white;
+  padding:30px 20px;
+}
+header .wrap{max-width:1200px;margin:auto}
+h1{margin:0 0 8px;font-size:clamp(28px,4vw,44px)}
+header p{margin:0;font-size:18px;line-height:1.5;max-width:900px}
+main{max-width:1200px;margin:auto;padding:24px 16px 50px}
+.grid{
+  display:grid;
+  grid-template-columns:1.15fr .85fr;
+  gap:20px;
+}
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  box-shadow:var(--shadow);
+  padding:20px;
+}
+h2{margin-top:0}
+.controls{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:12px;
+}
+input,select,button{
+  width:100%;
+  min-height:46px;
+  padding:10px 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  font-size:16px;
+}
+button{
+  cursor:pointer;
+  background:var(--accent);
+  color:#fff;
+  border:0;
+  font-weight:700;
+}
+button.secondary{
+  background:#eef2f7;
+  color:#26344d;
+  border:1px solid var(--border);
+}
+.hint{color:var(--muted);font-size:14px;margin-top:10px}
+.char-box{
+  display:grid;
+  grid-template-columns:140px 1fr;
+  gap:18px;
+  align-items:center;
+}
+.big-char{
+  height:140px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:var(--accent2);
+  border:2px solid #b9ceff;
+  font-size:72px;
+  font-weight:700;
+  overflow:hidden;
+  text-align:center;
+}
+.values{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+.value{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  background:#fafcff;
+}
+.value b{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+.value span{font-size:20px;font-family:Consolas,monospace}
+.description{
+  margin-top:12px;
+  padding:12px;
+  border-radius:10px;
+  background:#f8fafc;
+  line-height:1.5;
+}
+.legend{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:16px 0 10px;
+}
+.legend span{
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  font-size:14px;
+}
+.legend .control{background:var(--control)}
+.legend .printable{background:var(--printable)}
+.table-wrap{
+  margin-top:20px;
+  background:white;
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+}
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#172033;
+  color:white;
+  padding:12px 8px;
+  text-align:center;
+}
+tbody td{
+  border-top:1px solid #e6eaf0;
+  padding:9px 8px;
+  text-align:center;
+  font-family:Consolas,monospace;
+}
+tbody tr{cursor:pointer;transition:.15s}
+tbody tr:hover{outline:2px solid #9cbcff;outline-offset:-2px}
+tbody tr.control{background:var(--control)}
+tbody tr.printable{background:var(--printable)}
+tbody tr.selected{box-shadow:inset 0 0 0 3px var(--accent)}
+.symbol{
+  font-size:19px;
+  font-weight:700;
+  font-family:Arial,Helvetica,sans-serif;
+}
+.name{
+  text-align:left;
+  font-family:Arial,Helvetica,sans-serif;
+}
+.pager{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  padding:14px;
+  background:#fff;
+}
+.pager button{max-width:160px}
+.examples{
+  margin-top:20px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+.example{
+  padding:14px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:#fff;
+}
+.example code{font-size:18px}
+footer{
+  text-align:center;
+  color:var(--muted);
+  padding:18px;
+}
+@media(max-width:850px){
+  .grid{grid-template-columns:1fr}
+  .controls{grid-template-columns:1fr}
+  .char-box{grid-template-columns:1fr}
+  .big-char{height:110px}
+  .values{grid-template-columns:1fr}
+  .examples{grid-template-columns:1fr}
+  table{min-width:760px}
+  .table-wrap{overflow:auto}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Simulador da Tabela ASCII</h1>
+    <p>Explore os códigos ASCII em <strong>decimal</strong>, <strong>hexadecimal</strong> e <strong>binário</strong>, relacionando cada valor ao símbolo ou função correspondente.</p>
+  </div>
+</header>
+
+<main>
+  <section class="grid">
+    <div class="card">
+      <h2>Pesquisar um caractere</h2>
+      <div class="controls">
+        <input id="search" placeholder="Ex.: A, 65, 0x41, 01000001 ou SPACE">
+        <select id="filter">
+          <option value="all">Todos</option>
+          <option value="control">Caracteres de controle</option>
+          <option value="printable">Caracteres imprimíveis</option>
+          <option value="letters">Letras</option>
+          <option value="digits">Dígitos</option>
+          <option value="symbols">Símbolos</option>
+        </select>
+        <button id="btnSearch">Localizar</button>
+      </div>
+      <div class="hint">Você pode pesquisar pelo símbolo, nome, decimal, hexadecimal ou binário.</div>
+
+      <div class="legend">
+        <span class="control">Controle: 0–31 e 127</span>
+        <span class="printable">Imprimíveis: 32–126</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Caractere selecionado</h2>
+      <div class="char-box">
+        <div id="bigChar" class="big-char">A</div>
+        <div>
+          <div class="values">
+            <div class="value"><b>DECIMAL</b><span id="dec">65</span></div>
+            <div class="value"><b>HEXADECIMAL</b><span id="hex">41</span></div>
+            <div class="value"><b>BINÁRIO</b><span id="bin">01000001</span></div>
+          </div>
+          <div id="description" class="description"><strong>A</strong> — letra A maiúscula.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="examples">
+    <div class="example"><strong>Exemplo 1</strong><br><code>A = 65₁₀ = 41₁₆ = 01000001₂</code></div>
+    <div class="example"><strong>Exemplo 2</strong><br><code>0 = 48₁₀ = 30₁₆ = 00110000₂</code></div>
+    <div class="example"><strong>Exemplo 3</strong><br><code>SPACE = 32₁₀ = 20₁₆ = 00100000₂</code></div>
+  </section>
+
+  <section class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Decimal</th>
+          <th>Hexadecimal</th>
+          <th>Binário</th>
+          <th>Símbolo</th>
+          <th>Nome / função</th>
+        </tr>
+      </thead>
+      <tbody id="asciiBody"></tbody>
+    </table>
+    <div class="pager">
+      <button class="secondary" id="prev">← Anterior</button>
+      <span id="pageInfo">1 / 4</span>
+      <button class="secondary" id="next">Próxima →</button>
+    </div>
+  </section>
+</main>
+
+<footer>ASCII padrão: 128 códigos, de 0 a 127.</footer>
+
+<script>
+const controlNames = {
+  0:["NUL","Null"],
+  1:["SOH","Start of Heading"],
+  2:["STX","Start of Text"],
+  3:["ETX","End of Text"],
+  4:["EOT","End of Transmission"],
+  5:["ENQ","Enquiry"],
+  6:["ACK","Acknowledge"],
+  7:["BEL","Bell"],
+  8:["BS","Backspace"],
+  9:["HT","Horizontal Tab"],
+  10:["LF","Line Feed"],
+  11:["VT","Vertical Tab"],
+  12:["FF","Form Feed"],
+  13:["CR","Carriage Return"],
+  14:["SO","Shift Out"],
+  15:["SI","Shift In"],
+  16:["DLE","Data Link Escape"],
+  17:["DC1","Device Control 1"],
+  18:["DC2","Device Control 2"],
+  19:["DC3","Device Control 3"],
+  20:["DC4","Device Control 4"],
+  21:["NAK","Negative Acknowledge"],
+  22:["SYN","Synchronous Idle"],
+  23:["ETB","End of Transmission Block"],
+  24:["CAN","Cancel"],
+  25:["EM","End of Medium"],
+  26:["SUB","Substitute"],
+  27:["ESC","Escape"],
+  28:["FS","File Separator"],
+  29:["GS","Group Separator"],
+  30:["RS","Record Separator"],
+  31:["US","Unit Separator"],
+  127:["DEL","Delete"]
+};
+
+const specialNames = {
+  32:"SPACE — espaço",
+  33:"Exclamation mark — exclamação",
+  34:"Quotation mark — aspas",
+  35:"Number sign / hash",
+  36:"Dollar sign",
+  37:"Percent sign",
+  38:"Ampersand",
+  39:"Apostrophe",
+  40:"Left parenthesis",
+  41:"Right parenthesis",
+  42:"Asterisk",
+  43:"Plus sign",
+  44:"Comma",
+  45:"Hyphen / minus",
+  46:"Period / ponto",
+  47:"Slash",
+  58:"Colon",
+  59:"Semicolon",
+  60:"Less-than sign",
+  61:"Equals sign",
+  62:"Greater-than sign",
+  63:"Question mark",
+  64:"At sign",
+  91:"Left square bracket",
+  92:"Backslash",
+  93:"Right square bracket",
+  94:"Caret",
+  95:"Underscore",
+  96:"Grave accent",
+  123:"Left brace",
+  124:"Vertical bar",
+  125:"Right brace",
+  126:"Tilde"
+};
+
+function itemFor(code){
+  const isControl = code < 32 || code === 127;
+  let symbol, name;
+
+  if(isControl){
+    symbol = controlNames[code][0];
+    name = controlNames[code][1] + " — caractere de controle";
+  } else {
+    symbol = code === 32 ? "␠" : String.fromCharCode(code);
+    if(code >= 65 && code <= 90) name = "Letra " + symbol + " maiúscula";
+    else if(code >= 97 && code <= 122) name = "Letra " + symbol + " minúscula";
+    else if(code >= 48 && code <= 57) name = "Dígito " + symbol;
+    else name = specialNames[code] || "Símbolo ASCII";
+  }
+
+  return {
+    code,
+    dec:String(code),
+    hex:code.toString(16).toUpperCase().padStart(2,"0"),
+    bin:code.toString(2).padStart(8,"0"),
+    symbol,
+    name,
+    isControl
+  };
+}
+
+const ascii = Array.from({length:128},(_,i)=>itemFor(i));
+let currentData = [...ascii];
+let page = 0;
+const pageSize = 32;
+let selectedCode = 65;
+
+function matchesFilter(x, filter){
+  if(filter === "all") return true;
+  if(filter === "control") return x.isControl;
+  if(filter === "printable") return !x.isControl;
+  if(filter === "letters") return (x.code>=65&&x.code<=90)||(x.code>=97&&x.code<=122);
+  if(filter === "digits") return x.code>=48&&x.code<=57;
+  if(filter === "symbols") return !x.isControl &&
+      !((x.code>=65&&x.code<=90)||(x.code>=97&&x.code<=122)||(x.code>=48&&x.code<=57));
+  return true;
+}
+
+function normalizedSearch(q){
+  return q.trim().toUpperCase();
+}
+
+function matchesSearch(x, q){
+  if(!q) return true;
+  const nq = normalizedSearch(q);
+
+  if(x.symbol.toUpperCase() === nq) return true;
+  if(x.name.toUpperCase().includes(nq)) return true;
+  if(x.dec === nq) return true;
+  if(x.hex === nq.replace(/^0X/,"")) return true;
+  if(x.bin === nq.replace(/^0B/,"")) return true;
+
+  if(nq === "SPACE" && x.code === 32) return true;
+  return false;
+}
+
+function applyFilters(){
+  const q = document.getElementById("search").value;
+  const filter = document.getElementById("filter").value;
+  currentData = ascii.filter(x => matchesFilter(x,filter) && matchesSearch(x,q));
+  page = 0;
+  renderTable();
+  if(currentData.length === 1) selectChar(currentData[0].code);
+}
+
+function renderTable(){
+  const tbody = document.getElementById("asciiBody");
+  tbody.innerHTML = "";
+  const pages = Math.max(1,Math.ceil(currentData.length/pageSize));
+  if(page >= pages) page = pages-1;
+
+  const slice = currentData.slice(page*pageSize,(page+1)*pageSize);
+
+  if(slice.length===0){
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:30px">Nenhum código ASCII encontrado.</td></tr>`;
+  }
+
+  slice.forEach(x=>{
+    const tr=document.createElement("tr");
+    tr.className=(x.isControl?"control":"printable")+(x.code===selectedCode?" selected":"");
+    tr.innerHTML=`
+      <td>${x.dec}</td>
+      <td>${x.hex}</td>
+      <td>${x.bin}</td>
+      <td class="symbol">${escapeHtml(x.symbol)}</td>
+      <td class="name">${escapeHtml(x.name)}</td>`;
+    tr.addEventListener("click",()=>selectChar(x.code));
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById("pageInfo").textContent =
+    currentData.length ? `${page+1} / ${pages} — ${currentData.length} código(s)` : "0 resultados";
+
+  document.getElementById("prev").disabled = page<=0;
+  document.getElementById("next").disabled = page>=pages-1;
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function selectChar(code){
+  selectedCode=code;
+  const x=ascii[code];
+  document.getElementById("bigChar").textContent = x.symbol;
+  document.getElementById("dec").textContent = x.dec;
+  document.getElementById("hex").textContent = x.hex;
+  document.getElementById("bin").textContent = x.bin;
+  document.getElementById("description").innerHTML =
+    `<strong>${escapeHtml(x.symbol)}</strong> — ${escapeHtml(x.name)}.<br>
+    Decimal <strong>${x.dec}</strong> = hexadecimal <strong>${x.hex}</strong> = binário <strong>${x.bin}</strong>.`;
+  renderTable();
+}
+
+document.getElementById("btnSearch").addEventListener("click",applyFilters);
+document.getElementById("filter").addEventListener("change",applyFilters);
+document.getElementById("search").addEventListener("input",applyFilters);
+document.getElementById("search").addEventListener("keydown",e=>{
+  if(e.key==="Enter") applyFilters();
+});
+document.getElementById("prev").addEventListener("click",()=>{if(page>0){page--;renderTable();}});
+document.getElementById("next").addEventListener("click",()=>{
+  const pages=Math.ceil(currentData.length/pageSize);
+  if(page<pages-1){page++;renderTable();}
+});
+
+selectChar(65);
+renderTable();
+</script>
+</body>
+</html>
