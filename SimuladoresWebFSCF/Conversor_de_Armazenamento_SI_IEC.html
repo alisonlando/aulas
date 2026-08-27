@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conversor SI × IEC — Armazenamento Digital</title>
+<style>
+    :root{
+        --bg:#f5f7fb;
+        --card:#ffffff;
+        --text:#172033;
+        --muted:#667085;
+        --primary:#2563eb;
+        --primary2:#1d4ed8;
+        --green:#15803d;
+        --orange:#c2410c;
+        --border:#d8dee9;
+        --shadow:0 14px 40px rgba(15,23,42,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+        margin:0;
+        font-family:Arial, Helvetica, sans-serif;
+        background:linear-gradient(180deg,#eef4ff 0,#f8fafc 32%,#f5f7fb 100%);
+        color:var(--text);
+    }
+    header{
+        padding:34px 20px 22px;
+        text-align:center;
+    }
+    h1{
+        margin:0 0 10px;
+        font-size:clamp(28px,4vw,46px);
+        letter-spacing:-1px;
+    }
+    .subtitle{
+        max-width:900px;
+        margin:auto;
+        font-size:18px;
+        line-height:1.55;
+        color:var(--muted);
+    }
+    main{
+        width:min(1180px,calc(100% - 28px));
+        margin:0 auto 50px;
+        display:grid;
+        gap:22px;
+    }
+    .grid{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:22px;
+    }
+    .card{
+        background:var(--card);
+        border:1px solid var(--border);
+        border-radius:20px;
+        padding:24px;
+        box-shadow:var(--shadow);
+    }
+    h2{
+        margin:0 0 16px;
+        font-size:24px;
+    }
+    h3{
+        margin:0 0 8px;
+        font-size:19px;
+    }
+    .hint{
+        color:var(--muted);
+        line-height:1.55;
+        margin:0 0 20px;
+    }
+    .controls{
+        display:grid;
+        grid-template-columns:1.2fr 1fr 1fr;
+        gap:12px;
+        align-items:end;
+    }
+    label{
+        display:block;
+        font-weight:700;
+        margin-bottom:7px;
+    }
+    input,select,button{
+        width:100%;
+        font-size:18px;
+        border-radius:12px;
+        border:1px solid #cbd5e1;
+        padding:13px 14px;
+        background:white;
+        color:var(--text);
+    }
+    input:focus,select:focus{
+        outline:3px solid rgba(37,99,235,.16);
+        border-color:var(--primary);
+    }
+    button{
+        background:var(--primary);
+        border-color:var(--primary);
+        color:#fff;
+        font-weight:800;
+        cursor:pointer;
+        transition:.18s;
+    }
+    button:hover{background:var(--primary2); transform:translateY(-1px)}
+    .result{
+        margin-top:20px;
+        border-radius:16px;
+        padding:18px;
+        background:#eff6ff;
+        border:1px solid #bfdbfe;
+    }
+    .result .big{
+        font-size:clamp(28px,4vw,42px);
+        font-weight:900;
+        color:#1e40af;
+        overflow-wrap:anywhere;
+    }
+    .equation{
+        margin-top:9px;
+        font-family:Consolas, monospace;
+        font-size:16px;
+        color:#334155;
+        line-height:1.5;
+    }
+    .compare{
+        display:grid;
+        grid-template-columns:1fr auto 1fr;
+        gap:14px;
+        align-items:center;
+    }
+    .unitbox{
+        padding:18px;
+        border:1px solid var(--border);
+        border-radius:16px;
+        background:#fafafa;
+        text-align:center;
+    }
+    .unitbox strong{
+        display:block;
+        font-size:30px;
+        margin:8px 0;
+    }
+    .si strong{color:var(--green)}
+    .iec strong{color:var(--orange)}
+    .arrow{
+        font-size:32px;
+        font-weight:bold;
+        color:#64748b;
+    }
+    .tablewrap{overflow-x:auto}
+    table{
+        width:100%;
+        border-collapse:collapse;
+        min-width:650px;
+    }
+    th,td{
+        padding:13px 12px;
+        border-bottom:1px solid #e2e8f0;
+        text-align:left;
+    }
+    th{background:#f8fafc}
+    .badge{
+        display:inline-block;
+        padding:5px 9px;
+        border-radius:999px;
+        font-size:13px;
+        font-weight:800;
+    }
+    .badge.si{background:#dcfce7;color:#166534}
+    .badge.iec{background:#ffedd5;color:#9a3412}
+    .example{
+        border-left:5px solid var(--primary);
+        background:#f8fbff;
+        padding:18px 20px;
+        border-radius:12px;
+        line-height:1.6;
+    }
+    .example strong{color:#1e40af}
+    .barwrap{margin-top:18px}
+    .barlabel{
+        display:flex;
+        justify-content:space-between;
+        gap:15px;
+        font-size:14px;
+        color:#475569;
+        margin-bottom:7px;
+    }
+    .bar{
+        height:30px;
+        background:#e2e8f0;
+        border-radius:999px;
+        overflow:hidden;
+        position:relative;
+    }
+    .fill{
+        height:100%;
+        width:93.13%;
+        background:linear-gradient(90deg,#2563eb,#60a5fa);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:#fff;
+        font-weight:800;
+        font-size:14px;
+    }
+    .note{
+        margin-top:14px;
+        font-size:15px;
+        color:#475569;
+        line-height:1.55;
+    }
+    footer{
+        text-align:center;
+        padding:10px 20px 34px;
+        color:#64748b;
+        font-size:14px;
+    }
+    @media(max-width:820px){
+        .grid{grid-template-columns:1fr}
+        .controls{grid-template-columns:1fr}
+        .compare{grid-template-columns:1fr}
+        .arrow{transform:rotate(90deg);text-align:center}
+    }
+</style>
+</head>
+<body>
+<header>
+    <h1>Conversor de Armazenamento: SI × IEC</h1>
+    <p class="subtitle">
+        Compare as unidades decimais usadas por fabricantes (<strong>SI</strong>) com as unidades binárias
+        usadas em computação (<strong>IEC</strong>) e entenda por que a capacidade exibida pelo sistema
+        pode parecer menor que a anunciada no disco.
+    </p>
+</header>
+
+<main>
+    <section class="card">
+        <h2>Conversor interativo</h2>
+        <p class="hint">Digite um valor, escolha a unidade de origem e a unidade de destino. O cálculo é feito sempre a partir da quantidade exata de bytes.</p>
+
+        <div class="controls">
+            <div>
+                <label for="valor">Valor</label>
+                <input id="valor" type="number" min="0" step="any" value="1">
+            </div>
+            <div>
+                <label for="origem">De</label>
+                <select id="origem">
+                    <optgroup label="SI — Decimal">
+                        <option value="GB" selected>GB — gigabyte</option>
+                        <option value="MB">MB — megabyte</option>
+                        <option value="KB">kB — kilobyte</option>
+                        <option value="TB">TB — terabyte</option>
+                    </optgroup>
+                    <optgroup label="IEC — Binário">
+                        <option value="GiB">GiB — gibibyte</option>
+                        <option value="MiB">MiB — mebibyte</option>
+                        <option value="KiB">KiB — kibibyte</option>
+                        <option value="TiB">TiB — tebibyte</option>
+                    </optgroup>
+                </select>
+            </div>
+            <div>
+                <label for="destino">Para</label>
+                <select id="destino">
+                    <optgroup label="SI — Decimal">
+                        <option value="GB">GB — gigabyte</option>
+                        <option value="MB">MB — megabyte</option>
+                        <option value="KB">kB — kilobyte</option>
+                        <option value="TB">TB — terabyte</option>
+                    </optgroup>
+                    <optgroup label="IEC — Binário">
+                        <option value="GiB" selected>GiB — gibibyte</option>
+                        <option value="MiB">MiB — mebibyte</option>
+                        <option value="KiB">KiB — kibibyte</option>
+                        <option value="TiB">TiB — tebibyte</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <div class="result" aria-live="polite">
+            <div id="resultado" class="big">1 GB = 0,931323 GiB</div>
+            <div id="equacao" class="equation"></div>
+        </div>
+    </section>
+
+    <section class="grid">
+        <div class="card">
+            <h2>1 GiB vale quantos GB?</h2>
+            <div class="compare">
+                <div class="unitbox iec">
+                    <span class="badge iec">IEC / Binário</span>
+                    <strong>1 GiB</strong>
+                    <span>2³⁰ bytes</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="unitbox si">
+                    <span class="badge si">SI / Decimal</span>
+                    <strong>1,073741824 GB</strong>
+                    <span>≈ 1,074 GB</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>1 GB vale quantos GiB?</h2>
+            <div class="compare">
+                <div class="unitbox si">
+                    <span class="badge si">SI / Decimal</span>
+                    <strong>1 GB</strong>
+                    <span>10⁹ bytes</span>
+                </div>
+                <div class="arrow">→</div>
+                <div class="unitbox iec">
+                    <span class="badge iec">IEC / Binário</span>
+                    <strong>0,931322575 GiB</strong>
+                    <span>≈ 0,931 GiB</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="card">
+        <h2>Por que um disco de 1 TB aparece como aproximadamente 931 GiB?</h2>
+
+        <div class="example">
+            O fabricante usa o padrão decimal: <strong>1 TB = 1.000.000.000.000 bytes</strong>.<br>
+            Se o sistema apresentar a capacidade em unidades binárias, divide esses bytes por
+            <strong>1 GiB = 1.073.741.824 bytes</strong>.<br><br>
+            Resultado: <strong>1 TB ≈ 931,32 GiB</strong>.
+        </div>
+
+        <div class="barwrap">
+            <div class="barlabel">
+                <span>Capacidade anunciada: 1 TB</span>
+                <span>Exibição binária: ≈ 931,32 GiB</span>
+            </div>
+            <div class="bar">
+                <div class="fill">≈ 93,13%</div>
+            </div>
+        </div>
+
+        <p class="note">
+            Isso não significa, por si só, que aproximadamente 69 GB “sumiram”. A diferença principal ocorre porque
+            <strong>TB/GB</strong> usam potências de 1000, enquanto <strong>TiB/GiB</strong> usam potências de 1024.
+            Formatação, partições de recuperação e metadados do sistema de arquivos também podem reduzir o espaço disponível.
+        </p>
+    </section>
+
+    <section class="card">
+        <h2>Tabela de referência</h2>
+        <div class="tablewrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Padrão</th>
+                        <th>Unidade</th>
+                        <th>Quantidade de bytes</th>
+                        <th>Base</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td><span class="badge si">SI</span></td><td>1 kB</td><td>1.000 bytes</td><td>10³</td></tr>
+                    <tr><td><span class="badge iec">IEC</span></td><td>1 KiB</td><td>1.024 bytes</td><td>2¹⁰</td></tr>
+                    <tr><td><span class="badge si">SI</span></td><td>1 MB</td><td>1.000.000 bytes</td><td>10⁶</td></tr>
+                    <tr><td><span class="badge iec">IEC</span></td><td>1 MiB</td><td>1.048.576 bytes</td><td>2²⁰</td></tr>
+                    <tr><td><span class="badge si">SI</span></td><td>1 GB</td><td>1.000.000.000 bytes</td><td>10⁹</td></tr>
+                    <tr><td><span class="badge iec">IEC</span></td><td>1 GiB</td><td>1.073.741.824 bytes</td><td>2³⁰</td></tr>
+                    <tr><td><span class="badge si">SI</span></td><td>1 TB</td><td>1.000.000.000.000 bytes</td><td>10¹²</td></tr>
+                    <tr><td><span class="badge iec">IEC</span></td><td>1 TiB</td><td>1.099.511.627.776 bytes</td><td>2⁴⁰</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer>
+    Simulador didático — Unidades de armazenamento SI e IEC
+</footer>
+
+<script>
+const fatores = {
+    KB: 1e3,
+    MB: 1e6,
+    GB: 1e9,
+    TB: 1e12,
+    KiB: 2 ** 10,
+    MiB: 2 ** 20,
+    GiB: 2 ** 30,
+    TiB: 2 ** 40
+};
+
+const valor = document.getElementById('valor');
+const origem = document.getElementById('origem');
+const destino = document.getElementById('destino');
+const resultado = document.getElementById('resultado');
+const equacao = document.getElementById('equacao');
+
+function formatar(n, max=9){
+    return new Intl.NumberFormat('pt-BR',{
+        maximumFractionDigits:max
+    }).format(n);
+}
+
+function atualizar(){
+    const v = parseFloat(valor.value);
+    if(!Number.isFinite(v) || v < 0){
+        resultado.textContent = 'Digite um valor válido.';
+        equacao.textContent = '';
+        return;
+    }
+
+    const o = origem.value;
+    const d = destino.value;
+
+    const bytes = v * fatores[o];
+    const convertido = bytes / fatores[d];
+
+    resultado.textContent = `${formatar(v, 9)} ${o} = ${formatar(convertido, 9)} ${d}`;
+    equacao.textContent =
+        `${formatar(v,9)} × ${fatores[o].toLocaleString('pt-BR')} bytes ÷ ` +
+        `${fatores[d].toLocaleString('pt-BR')} bytes por ${d} = ${formatar(convertido,9)} ${d}`;
+}
+
+[valor, origem, destino].forEach(el => el.addEventListener('input', atualizar));
+atualizar();
+</script>
+</body>
+</html>
