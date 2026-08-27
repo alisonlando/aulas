@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Números Positivos e Negativos</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f4f6f8;color:#1f2937}
+.container{max-width:1100px;margin:auto;padding:24px}
+h1{margin-bottom:8px;color:#0f172a}
+.subtitle{margin-top:0;color:#475569;font-size:1.05rem;line-height:1.5}
+.panel{background:#fff;border:1px solid #dbe2ea;border-radius:14px;padding:20px;margin-top:20px}
+.bit-area{overflow-x:auto;padding-bottom:8px}
+.bits{min-width:760px;display:grid;grid-template-columns:repeat(8,1fr);gap:10px;margin-top:18px}
+.bit-card{text-align:center;border:2px solid #cbd5e1;border-radius:12px;padding:10px;background:#f8fafc}
+.bit-card.sign{border-color:#dc2626;background:#fef2f2}
+.tag{min-height:24px;font-weight:bold;font-size:.9rem;color:#dc2626}
+.position{font-size:.85rem;color:#64748b;margin-bottom:5px}
+.bit-button{width:100%;min-height:72px;margin:7px 0;border:2px solid #64748b;border-radius:10px;font-size:2rem;font-weight:bold;background:white;color:#0f172a;cursor:pointer}
+.bit-button:hover{background:#e2e8f0}
+.bit-button.active{background:#0f172a;color:#fff;border-color:#0f172a}
+.bit-card.sign .bit-button.active{background:#b91c1c;border-color:#b91c1c}
+.weight{font-size:.82rem;color:#475569;line-height:1.35}
+.values{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.value-card{background:#f8fafc;border:1px solid #cbd5e1;border-radius:10px;padding:16px;text-align:center}
+.label{font-size:.85rem;color:#64748b;text-transform:uppercase}
+.value{margin-top:5px;font-size:1.7rem;font-weight:bold;font-family:Consolas,monospace}
+.sign-display{padding:18px;border-radius:12px;text-align:center;font-size:1.25rem;font-weight:bold;margin-top:15px}
+.positive{background:#ecfdf5;border:2px solid #86efac;color:#166534}
+.negative{background:#fef2f2;border:2px solid #fca5a5;color:#991b1b}
+.zero{background:#f8fafc;border:2px solid #cbd5e1;color:#334155}
+.concepts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.concept{border-radius:12px;padding:18px;line-height:1.5}
+.concept-positive{background:#ecfdf5;border:2px solid #bbf7d0}
+.concept-negative{background:#fef2f2;border:2px solid #fecaca}
+.calculation{font-family:Consolas,monospace;font-size:1.15rem;background:#0f172a;color:#fff;padding:16px;border-radius:10px;line-height:1.7;overflow-x:auto}
+.examples{display:flex;flex-wrap:wrap;gap:10px}
+button.example,button.reset{border:0;border-radius:9px;padding:12px 16px;font-size:1rem;cursor:pointer;font-weight:bold}
+button.example{background:#e2e8f0;color:#0f172a}
+button.example:hover{background:#cbd5e1}
+button.reset{background:#b91c1c;color:#fff}
+.highlight{background:#fffbeb;border:2px solid #f59e0b;border-radius:12px;padding:18px;margin-top:20px;font-size:1.05rem;line-height:1.6}
+.number-line{position:relative;margin:45px 10px 25px;height:70px;border-top:4px solid #334155}
+.number-line::before,.number-line::after{content:"";position:absolute;top:-10px;width:0;height:0;border-top:8px solid transparent;border-bottom:8px solid transparent}
+.number-line::before{left:-2px;border-right:14px solid #334155}
+.number-line::after{right:-2px;border-left:14px solid #334155}
+.zero-mark{position:absolute;left:50%;top:-13px;width:3px;height:22px;background:#334155}
+.zero-label{position:absolute;left:50%;top:14px;transform:translateX(-50%);font-weight:bold}
+.marker{position:absolute;top:-22px;transform:translateX(-50%);width:20px;height:20px;border-radius:50%;background:#2563eb;border:3px solid white;outline:2px solid #2563eb}
+.marker-label{position:absolute;top:-48px;transform:translateX(-50%);font-weight:bold;color:#2563eb;white-space:nowrap}
+.line-label{position:absolute;top:35px;font-size:.85rem;font-weight:bold}
+.left-label{left:2%;color:#991b1b}.right-label{right:2%;color:#166534}
+@media(max-width:700px){.container{padding:14px}.values,.concepts{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Simulador: Números Positivos e Negativos em Binário</h1>
+<p class="subtitle">Clique nos bits para alternar entre <strong>0</strong> e <strong>1</strong>. O simulador usa <strong>8 bits com complemento de 2</strong>, a forma mais comum de representar inteiros positivos e negativos nos computadores.</p>
+
+<div class="panel">
+<h2>Palavra binária de 8 bits</h2>
+<p>O <strong>bit 7 (MSB)</strong> tem papel especial: em complemento de 2, seu peso é <strong>-128</strong>. Os demais bits possuem pesos positivos.</p>
+<div class="bit-area"><div class="bits" id="bits"></div></div>
+</div>
+
+<div class="panel">
+<div class="values">
+<div class="value-card"><div class="label">Binário</div><div class="value" id="binaryValue">00000000</div></div>
+<div class="value-card"><div class="label">Decimal com sinal</div><div class="value" id="signedValue">0</div></div>
+<div class="value-card"><div class="label">Hexadecimal</div><div class="value" id="hexValue">0x00</div></div>
+</div>
+<div id="signDisplay" class="sign-display zero">ZERO — bit de sinal = 0</div>
+</div>
+
+<div class="panel">
+<h2>Reta numérica</h2>
+<p>Observe onde o valor atual se encontra no intervalo representável por 8 bits com sinal: <strong>-128 até +127</strong>.</p>
+<div class="number-line">
+<div class="zero-mark"></div><div class="zero-label">0</div>
+<div id="marker" class="marker"></div><div id="markerLabel" class="marker-label">0</div>
+<div class="line-label left-label">−128</div><div class="line-label right-label">+127</div>
+</div>
+</div>
+
+<div class="panel">
+<div class="concepts">
+<div class="concept concept-positive">
+<h2>Número positivo</h2>
+<p>Quando o <strong>MSB = 0</strong>, o número é zero ou positivo.</p>
+<p>Exemplo:</p>
+<p><strong>00000101₂ = +5₁₀</strong></p>
+</div>
+<div class="concept concept-negative">
+<h2>Número negativo</h2>
+<p>Quando o <strong>MSB = 1</strong>, o número é negativo na representação em complemento de 2.</p>
+<p>Exemplo:</p>
+<p><strong>11111011₂ = −5₁₀</strong></p>
+</div>
+</div>
+</div>
+
+<div class="panel">
+<h2>Como o valor é calculado?</h2>
+<div class="calculation" id="calculation">0 = 0</div>
+<p id="explanation">Todos os bits estão em zero.</p>
+</div>
+
+<div class="panel">
+<h2>Experimente</h2>
+<p>Compare números positivos e negativos:</p>
+<div class="examples">
+<button class="example" data-value="1">+1</button>
+<button class="example" data-value="5">+5</button>
+<button class="example" data-value="10">+10</button>
+<button class="example" data-value="127">+127 máximo</button>
+<button class="example" data-value="-1">−1</button>
+<button class="example" data-value="-5">−5</button>
+<button class="example" data-value="-10">−10</button>
+<button class="example" data-value="-128">−128 mínimo</button>
+<button class="reset" id="reset">Zerar</button>
+</div>
+</div>
+
+<div class="highlight">
+<strong>Ideia principal:</strong><br>
+Em complemento de 2, uma palavra de 8 bits representa valores de <strong>−128 a +127</strong>. O MSB possui peso <strong>−128</strong>. Assim, por exemplo:<br><br>
+<strong>11111011₂ = −128 + 64 + 32 + 16 + 8 + 2 + 1 = −5</strong>.
+</div>
+</div>
+
+<script>
+const bitsContainer=document.getElementById("bits");
+let bits=[0,0,0,0,0,0,0,0];
+
+function createBits(){
+ bitsContainer.innerHTML="";
+ for(let position=7;position>=0;position--){
+  const index=7-position;
+  const card=document.createElement("div");
+  card.className="bit-card"+(position===7?" sign":"");
+  const tag=document.createElement("div");
+  tag.className="tag";
+  tag.textContent=position===7?"MSB / SINAL":" ";
+  const pos=document.createElement("div");
+  pos.className="position"; pos.textContent="Bit "+position;
+  const button=document.createElement("button");
+  button.className="bit-button"; button.dataset.index=index; button.textContent=bits[index];
+  button.setAttribute("aria-label","Alternar bit "+position);
+  button.addEventListener("click",()=>{bits[index]=bits[index]?0:1;update()});
+  const weight=document.createElement("div"); weight.className="weight";
+  if(position===7) weight.innerHTML="Peso<br><strong>−2<sup>7</sup> = −128</strong>";
+  else weight.innerHTML="Peso<br><strong>2<sup>"+position+"</sup> = "+Math.pow(2,position)+"</strong>";
+  card.append(tag,pos,button,weight); bitsContainer.appendChild(card);
+ }
+}
+
+function signedDecimal(){
+ let value=0;
+ bits.forEach((bit,index)=>{
+  if(!bit)return;
+  const position=7-index;
+  value += position===7 ? -128 : Math.pow(2,position);
+ });
+ return value;
+}
+
+function update(){
+ document.querySelectorAll(".bit-button").forEach((b,i)=>{
+  b.textContent=bits[i]; b.classList.toggle("active",bits[i]===1);
+ });
+ const binary=bits.join("");
+ const unsigned=parseInt(binary,2);
+ const signed=signedDecimal();
+ document.getElementById("binaryValue").textContent=binary;
+ document.getElementById("signedValue").textContent=signed>0?"+"+signed:String(signed);
+ document.getElementById("hexValue").textContent="0x"+unsigned.toString(16).toUpperCase().padStart(2,"0");
+
+ const sd=document.getElementById("signDisplay");
+ if(signed>0){sd.className="sign-display positive";sd.textContent="POSITIVO — MSB = 0";}
+ else if(signed<0){sd.className="sign-display negative";sd.textContent="NEGATIVO — MSB = 1";}
+ else{sd.className="sign-display zero";sd.textContent="ZERO — MSB = 0";}
+
+ let terms=[],nums=[];
+ bits.forEach((bit,index)=>{
+  if(bit){
+   const p=7-index;
+   if(p===7){terms.push("−2^7");nums.push("−128")}
+   else{terms.push("2^"+p);nums.push(String(Math.pow(2,p)))}
+  }
+ });
+ const calc=document.getElementById("calculation");
+ calc.textContent=terms.length?terms.join(" + ")+" = "+nums.join(" + ")+" = "+signed:"0 = 0";
+ const exp=document.getElementById("explanation");
+ if(signed<0) exp.innerHTML="Como o <strong>MSB = 1</strong>, o termo −128 participa da soma e o resultado é negativo.";
+ else if(signed>0) exp.innerHTML="Como o <strong>MSB = 0</strong>, somente pesos positivos participam da soma.";
+ else exp.textContent="Todos os bits estão em zero.";
+
+ const percent=((signed+128)/255)*100;
+ document.getElementById("marker").style.left=percent+"%";
+ document.getElementById("markerLabel").style.left=percent+"%";
+ document.getElementById("markerLabel").textContent=signed>0?"+"+signed:String(signed);
+}
+
+function setSignedValue(value){
+ let unsigned=value<0?256+value:value;
+ const binary=unsigned.toString(2).padStart(8,"0");
+ bits=binary.split("").map(Number); update();
+}
+
+document.querySelectorAll(".example").forEach(b=>b.addEventListener("click",()=>setSignedValue(Number(b.dataset.value))));
+document.getElementById("reset").addEventListener("click",()=>{bits=[0,0,0,0,0,0,0,0];update()});
+createBits();update();
+</script>
+</body>
+</html>
