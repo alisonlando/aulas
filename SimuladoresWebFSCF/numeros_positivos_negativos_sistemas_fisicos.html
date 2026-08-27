@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Números Positivos e Negativos em Sistemas Computacionais</title>
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --card:#ffffff;
+    --text:#182230;
+    --muted:#64748b;
+    --positive:#16803a;
+    --negative:#c62828;
+    --zero:#334155;
+    --accent:#2257d6;
+    --line:#dce3ef;
+    --shadow:0 12px 35px rgba(15,23,42,.10);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Inter,Segoe UI,Arial,sans-serif;
+    background:linear-gradient(180deg,#eef3ff 0%,var(--bg) 45%);
+    color:var(--text);
+  }
+  header{
+    padding:34px 20px 24px;
+    text-align:center;
+  }
+  header h1{margin:0 0 10px;font-size:clamp(1.8rem,4vw,3rem)}
+  header p{margin:0 auto;max-width:900px;color:var(--muted);font-size:1.08rem;line-height:1.6}
+  main{max-width:1180px;margin:auto;padding:0 18px 50px}
+  .legend{
+    display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:8px 0 22px
+  }
+  .tag{padding:9px 14px;border-radius:999px;background:#fff;box-shadow:var(--shadow);font-weight:700}
+  .tag.pos{color:var(--positive)} .tag.neg{color:var(--negative)} .tag.zero{color:var(--zero)}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;box-shadow:var(--shadow)
+  }
+  .card h2{margin:0 0 6px;font-size:1.35rem}
+  .card p{color:var(--muted);line-height:1.55}
+  .display{
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:stretch;margin-top:14px
+  }
+  .meter,.info{
+    border:1px solid var(--line);border-radius:14px;padding:16px;background:#fbfcff
+  }
+  .value{font-size:clamp(2rem,5vw,3.4rem);font-weight:800;line-height:1}
+  .state{font-weight:800;margin-top:8px}
+  .axis{
+    position:relative;height:52px;margin:14px 0 8px;background:linear-gradient(90deg,#fde7e7 0 49.6%,#eef2f7 49.6% 50.4%,#e3f7e9 50.4% 100%);
+    border-radius:12px;border:1px solid var(--line);overflow:hidden
+  }
+  .axis::after{content:"0";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-weight:900;background:#fff;padding:2px 6px;border-radius:6px}
+  .marker{position:absolute;top:4px;bottom:4px;width:5px;border-radius:4px;background:var(--accent);transition:left .25s ease}
+  input[type=range]{width:100%;accent-color:var(--accent)}
+  button{border:0;background:var(--accent);color:#fff;font-weight:700;padding:10px 14px;border-radius:10px;cursor:pointer}
+  button.secondary{background:#475569}
+  .buttons{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .binary{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:1.18rem;font-weight:800;letter-spacing:.08em;word-break:break-all}
+  .bit-sign{padding:2px 5px;border-radius:5px;background:#fff0bf;color:#7c5600}
+  canvas{width:100%;height:180px;border-radius:12px;background:#0e1726;display:block}
+  .ecg-legend{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin:9px 0 4px;font-size:.92rem;font-weight:800}
+  .ecg-legend .positive-zone{color:var(--positive);text-align:left}
+  .ecg-legend .zero-zone{color:var(--zero);text-align:center}
+  .ecg-legend .negative-zone{color:var(--negative);text-align:right}
+  .ecg-note{margin:4px 0 0!important;font-size:.9rem;text-align:center}
+  .formula{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#eef3ff;border-left:4px solid var(--accent);padding:12px;border-radius:8px;font-weight:700}
+  .mini{font-size:.92rem;color:var(--muted)}
+  .full{grid-column:1 / -1}
+  .sub-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;align-items:end}
+  label{display:block;font-weight:700;margin-bottom:5px}
+  input[type=number]{width:100%;padding:11px;border:1px solid #cdd6e4;border-radius:9px;font-size:1rem}
+  .result-box{padding:16px;border-radius:12px;border:1px solid var(--line);background:#fbfcff;margin-top:14px}
+  footer{text-align:center;color:var(--muted);padding:10px 20px 30px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}.display{grid-template-columns:1fr}.sub-grid{grid-template-columns:1fr}.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Positivos e Negativos em Sistemas Computacionais</h1>
+  <p>Explore como valores acima e abaixo de zero aparecem em sinais físicos, finanças e operações aritméticas. O objetivo é perceber que o computador armazena números, mas o <strong>significado do sinal</strong> depende do fenômeno representado.</p>
+</header>
+<main>
+  <div class="legend">
+    <div class="tag pos">▲ valor positivo</div>
+    <div class="tag zero">● zero / referência</div>
+    <div class="tag neg">▼ valor negativo</div>
+  </div>
+
+  <section class="grid">
+    <article class="card">
+      <h2>1. ECG — sinal elétrico do coração</h2>
+      <p>O eletrocardiograma mede uma diferença de potencial. Em relação a uma linha de referência, o sinal pode assumir valores positivos ou negativos.</p>
+      <canvas id="ecg"></canvas>
+      <div class="ecg-legend" aria-label="Legenda do gráfico de ECG">
+        <div class="positive-zone">▲ Acima da linha de referência = POSITIVO (+)</div>
+        <div class="zero-zone">── 0 mV ──</div>
+        <div class="negative-zone">▼ Abaixo da linha de referência = NEGATIVO (−)</div>
+      </div>
+      <p class="ecg-note">A linha horizontal central representa a referência de <strong>0 mV</strong>.</p>
+      <div class="display">
+        <div class="meter">
+          <div class="mini">Amostra atual</div>
+          <div id="ecgValue" class="value">0.00 mV</div>
+          <div id="ecgState" class="state">Referência</div>
+        </div>
+        <div class="info">
+          <strong>Interpretação</strong>
+          <p id="ecgText">O sinal está sobre a linha de referência.</p>
+          <div class="formula">amostra → número com sinal</div>
+        </div>
+      </div>
+      <div class="buttons"><button id="ecgToggle">Pausar animação</button></div>
+    </article>
+
+    <article class="card">
+      <h2>2. Saldo em conta</h2>
+      <p>Um saldo positivo indica crédito disponível. Um valor abaixo de zero pode representar dívida, cheque especial ou débito.</p>
+      <div class="axis"><div id="saldoMarker" class="marker"></div></div>
+      <input id="saldo" type="range" min="-2000" max="2000" step="100" value="800" />
+      <div class="display">
+        <div class="meter">
+          <div class="mini">Saldo</div>
+          <div id="saldoValue" class="value">R$ 800</div>
+          <div id="saldoState" class="state">Positivo</div>
+        </div>
+        <div class="info">
+          <strong>Exemplo computacional</strong>
+          <p id="saldoText">Há R$ 800 de crédito.</p>
+          <div class="formula">novo saldo = saldo + movimentação</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h2>3. Grandeza física com referência</h2>
+      <p>Em muitos sistemas físicos, o zero é uma referência. Valores positivos e negativos podem representar lados, sentidos ou desvios diferentes.</p>
+      <label for="temp">Exemplo: temperatura relativa a 0 °C</label>
+      <div class="axis"><div id="tempMarker" class="marker"></div></div>
+      <input id="temp" type="range" min="-20" max="40" step="1" value="-5" />
+      <div class="display">
+        <div class="meter">
+          <div id="tempValue" class="value">−5 °C</div>
+          <div id="tempState" class="state">Abaixo da referência</div>
+        </div>
+        <div class="info">
+          <p id="tempText">A temperatura está 5 °C abaixo de zero.</p>
+          <div class="formula">sinal = direção em relação à referência</div>
+        </div>
+      </div>
+    </article>
+
+    <article class="card">
+      <h2>4. Representação binária com sinal</h2>
+      <p>Em inteiros com 8 bits usando <strong>complemento de 2</strong>, o bit mais significativo participa da codificação dos números negativos.</p>
+      <label for="signed">Valor decimal (−128 a 127)</label>
+      <input id="signed" type="range" min="-128" max="127" step="1" value="-5" />
+      <div class="display">
+        <div class="meter">
+          <div id="signedValue" class="value">−5</div>
+          <div id="signedState" class="state">Negativo</div>
+        </div>
+        <div class="info">
+          <div class="mini">8 bits — complemento de 2</div>
+          <div id="binary" class="binary">11111011</div>
+          <p class="mini">O primeiro bit está destacado apenas para fins didáticos. Em complemento de 2, o valor é interpretado pelo conjunto dos 8 bits.</p>
+        </div>
+      </div>
+    </article>
+
+    <article class="card full">
+      <h2>5. Resultado de uma subtração</h2>
+      <p>Uma subtração pode produzir resultado positivo, zero ou negativo. Em hardware, a mesma unidade aritmética pode realizar a operação usando adição e complemento de 2.</p>
+      <div class="sub-grid">
+        <div><label for="a">Valor A</label><input id="a" type="number" value="12" min="-128" max="127"></div>
+        <div><label for="b">Valor B</label><input id="b" type="number" value="20" min="-128" max="127"></div>
+        <div><button id="calc">Calcular A − B</button></div>
+      </div>
+      <div class="result-box">
+        <div id="subEquation" class="value" style="font-size:2rem">12 − 20 = −8</div>
+        <p id="subMeaning">O resultado é negativo porque B é maior que A.</p>
+        <div id="subBinary" class="formula">12 + complemento de 2 de 20 → −8</div>
+      </div>
+    </article>
+  </section>
+</main>
+<footer>Página didática — HTML5, CSS3 e JavaScript puro.</footer>
+
+<script>
+const fmtSign = n => n > 0 ? '+'+n : (n < 0 ? '−'+Math.abs(n) : '0');
+const classColor = n => n > 0 ? 'var(--positive)' : n < 0 ? 'var(--negative)' : 'var(--zero)';
+const setMarker=(el,val,min,max)=> el.style.left = `calc(${((val-min)/(max-min))*100}% - 2px)`;
+
+// SALDO
+const saldo=document.getElementById('saldo');
+function updateSaldo(){
+  const v=Number(saldo.value); setMarker(saldoMarker,v,-2000,2000);
+  saldoValue.textContent='R$ '+v.toLocaleString('pt-BR'); saldoValue.style.color=classColor(v);
+  saldoState.textContent=v>0?'Positivo':v<0?'Negativo':'Zero'; saldoState.style.color=classColor(v);
+  saldoText.textContent=v>0?`Há R$ ${v.toLocaleString('pt-BR')} de crédito.`:v<0?`A conta está R$ ${Math.abs(v).toLocaleString('pt-BR')} abaixo de zero.`:'O saldo está exatamente zerado.';
+}
+saldo.addEventListener('input',updateSaldo); updateSaldo();
+
+// TEMPERATURA
+const temp=document.getElementById('temp');
+function updateTemp(){
+  const v=Number(temp.value); setMarker(tempMarker,v,-20,40);
+  tempValue.textContent=fmtSign(v)+' °C'; tempValue.style.color=classColor(v);
+  tempState.textContent=v>0?'Acima da referência':v<0?'Abaixo da referência':'Na referência'; tempState.style.color=classColor(v);
+  tempText.textContent=v>0?`A temperatura está ${v} °C acima de zero.`:v<0?`A temperatura está ${Math.abs(v)} °C abaixo de zero.`:'A temperatura coincide com a referência de 0 °C.';
+}
+temp.addEventListener('input',updateTemp); updateTemp();
+
+// BINÁRIO COM SINAL
+const signed=document.getElementById('signed');
+function to8(v){return ((v+256)%256).toString(2).padStart(8,'0')}
+function updateSigned(){
+  const v=Number(signed.value), bits=to8(v);
+  signedValue.textContent=fmtSign(v); signedValue.style.color=classColor(v);
+  signedState.textContent=v>0?'Positivo':v<0?'Negativo':'Zero'; signedState.style.color=classColor(v);
+  binary.innerHTML=`<span class="bit-sign">${bits[0]}</span>${bits.slice(1)}`;
+}
+signed.addEventListener('input',updateSigned); updateSigned();
+
+// SUBTRAÇÃO
+function updateSub(){
+  let av=Math.max(-128,Math.min(127,Number(a.value)||0));
+  let bv=Math.max(-128,Math.min(127,Number(b.value)||0));
+  let r=av-bv;
+  subEquation.textContent=`${av} − ${bv} = ${fmtSign(r)}`; subEquation.style.color=classColor(r);
+  subMeaning.textContent=r>0?'O resultado é positivo porque A é maior que B.':r<0?'O resultado é negativo porque B é maior que A.':'O resultado é zero porque A e B são iguais.';
+  if(r>=-128 && r<=127){
+    const compB=to8(-bv); const aBits=to8(av); const rBits=to8(r);
+    subBinary.innerHTML=`A: ${aBits} &nbsp; + &nbsp; (−B): ${compB} &nbsp; → &nbsp; resultado: ${rBits} (${fmtSign(r)})`;
+  } else {
+    subBinary.textContent='O resultado ultrapassa a faixa de 8 bits com sinal (−128 a 127): overflow.';
+  }
+}
+calc.addEventListener('click',updateSub); a.addEventListener('input',updateSub); b.addEventListener('input',updateSub); updateSub();
+
+// ECG ANIMADO
+const canvas=document.getElementById('ecg'),ctx=canvas.getContext('2d');
+let running=true,t=0;
+function resize(){canvas.width=canvas.clientWidth*devicePixelRatio;canvas.height=180*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+window.addEventListener('resize',resize); resize();
+function ecgSignal(x){
+  const phase=x%120;
+  let y=0;
+  if(phase>18&&phase<30) y=0.18*Math.sin((phase-18)/12*Math.PI);
+  if(phase>42&&phase<47) y=-0.30*((phase-42)/5);
+  if(phase>=47&&phase<51) y=-0.30+1.45*((phase-47)/4);
+  if(phase>=51&&phase<55) y=1.15-1.70*((phase-51)/4);
+  if(phase>=55&&phase<60) y=-0.55+0.55*((phase-55)/5);
+  if(phase>74&&phase<98) y+=0.32*Math.sin((phase-74)/24*Math.PI);
+  return y;
+}
+function drawECG(){
+  const w=canvas.clientWidth,h=180,mid=h/2;
+  ctx.clearRect(0,0,w,h); ctx.fillStyle='#0e1726';ctx.fillRect(0,0,w,h);
+  ctx.fillStyle='rgba(22,128,58,.13)';ctx.fillRect(0,0,w,mid);
+  ctx.fillStyle='rgba(198,40,40,.13)';ctx.fillRect(0,mid,w,mid);
+  ctx.strokeStyle='rgba(255,255,255,.10)';ctx.lineWidth=1;
+  for(let x=0;x<w;x+=30){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,h);ctx.stroke()}
+  for(let y=0;y<h;y+=30){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke()}
+  ctx.strokeStyle='rgba(255,255,255,.72)';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,mid);ctx.lineTo(w,mid);ctx.stroke();
+  ctx.font='700 12px Segoe UI, Arial';
+  ctx.fillStyle='rgba(120,255,160,.95)';ctx.fillText('POSITIVO (+)',10,18);
+  ctx.fillStyle='rgba(255,145,145,.95)';ctx.fillText('NEGATIVO (−)',10,h-10);
+  ctx.fillStyle='rgba(255,255,255,.9)';ctx.fillText('0 mV',w-38,mid-6);
+  ctx.strokeStyle='#50e37d';ctx.lineWidth=2.4;ctx.beginPath();
+  let current=0;
+  for(let x=0;x<w;x++){
+    const s=ecgSignal(x+t); current=s;
+    const y=mid-s*58;
+    x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+  }
+  ctx.stroke();
+  const sample=ecgSignal(w-1+t);
+  ecgValue.textContent=(sample>=0?'+':'−')+Math.abs(sample).toFixed(2)+' mV';
+  if(Math.abs(sample)<.03){ecgState.textContent='Referência';ecgText.textContent='O sinal está muito próximo da linha de referência.'}
+  else if(sample>0){ecgState.textContent='Valor positivo';ecgText.textContent='A amostra está acima da referência elétrica.'}
+  else {ecgState.textContent='Valor negativo';ecgText.textContent='A amostra está abaixo da referência elétrica.'}
+  ecgValue.style.color=classColor(Math.abs(sample)<.03?0:sample); ecgState.style.color=ecgValue.style.color;
+  if(running)t+=1.5;
+  requestAnimationFrame(drawECG);
+}
+ecgToggle.addEventListener('click',()=>{running=!running;ecgToggle.textContent=running?'Pausar animação':'Continuar animação'}); drawECG();
+</script>
+</body>
+</html>
