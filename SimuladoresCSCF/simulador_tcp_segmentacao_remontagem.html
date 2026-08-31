@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador TCP — Segmentação e Remontagem</title>
+<style>
+  :root{
+    --bg:#f4f7fb;
+    --card:#ffffff;
+    --text:#172033;
+    --muted:#60708a;
+    --line:#d8e0ec;
+    --blue:#2563eb;
+    --blue2:#dbeafe;
+    --green:#15803d;
+    --green2:#dcfce7;
+    --orange:#c2410c;
+    --orange2:#ffedd5;
+    --red:#b91c1c;
+    --red2:#fee2e2;
+    --purple:#7c3aed;
+    --purple2:#ede9fe;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-size:17px;
+  }
+  .wrap{max-width:1280px;margin:auto;padding:22px}
+  h1{font-size:clamp(26px,4vw,42px);margin:0 0 6px}
+  .subtitle{color:var(--muted);font-size:18px;margin-bottom:20px}
+  .toolbar,.panel{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:16px;
+  }
+  .toolbar{
+    display:grid;
+    grid-template-columns:2fr 1fr auto;
+    gap:12px;
+    align-items:end;
+    margin-bottom:18px;
+  }
+  label{display:block;font-weight:700;margin-bottom:6px}
+  input,select,button{
+    font:inherit;
+    min-height:44px;
+    border-radius:10px;
+  }
+  input,select{
+    width:100%;
+    border:1px solid #aebbd0;
+    padding:9px 11px;
+    background:white;
+  }
+  .buttons{display:flex;gap:8px;flex-wrap:wrap}
+  button{
+    border:0;
+    padding:9px 14px;
+    font-weight:700;
+    cursor:pointer;
+    background:var(--blue);
+    color:white;
+  }
+  button.secondary{background:#475569}
+  button.warn{background:#c2410c}
+  button.light{background:#e8eef8;color:#20304e}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .legend{
+    display:flex;gap:12px;flex-wrap:wrap;
+    margin:0 0 18px;
+    color:#40506a;font-size:15px
+  }
+  .key{display:flex;align-items:center;gap:6px}
+  .dot{width:14px;height:14px;border-radius:4px;display:inline-block}
+  .network{
+    display:grid;
+    grid-template-columns:minmax(230px,1fr) minmax(300px,1.7fr) minmax(230px,1fr);
+    gap:14px;
+    align-items:stretch;
+  }
+  .host{
+    min-height:420px;
+    position:relative;
+  }
+  .host h2,.route h2{margin:0 0 10px;font-size:21px}
+  .layer{
+    border:2px solid var(--line);
+    border-radius:12px;
+    padding:12px;
+    margin:10px 0;
+    min-height:105px;
+    background:#fbfdff;
+  }
+  .layer.app{border-color:#93c5fd;background:#eff6ff}
+  .layer.tcp{border-color:#86efac;background:#f0fdf4}
+  .layer small{color:var(--muted)}
+  .message-box{
+    margin-top:8px;
+    padding:10px;
+    border-radius:9px;
+    background:white;
+    border:1px dashed #93a5bd;
+    word-break:break-word;
+    min-height:52px;
+  }
+  .segments{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-top:8px;
+  }
+  .segment{
+    border:2px solid var(--purple);
+    background:var(--purple2);
+    color:#3b1b7a;
+    border-radius:9px;
+    padding:7px 8px;
+    min-width:74px;
+    text-align:center;
+    font-weight:700;
+    transition:.25s;
+  }
+  .segment .payload{display:block;font-size:13px;font-weight:400;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95px}
+  .segment.received{border-color:var(--green);background:var(--green2);color:#14532d}
+  .segment.lost{border-color:var(--red);background:var(--red2);color:#7f1d1d}
+  .segment.waiting{opacity:.45}
+  .route{
+    min-height:420px;
+    position:relative;
+    overflow:hidden;
+  }
+  .track{
+    position:relative;
+    height:250px;
+    margin-top:22px;
+    border-radius:14px;
+    border:2px dashed #c5d0df;
+    background:
+      linear-gradient(90deg,rgba(219,234,254,.45),rgba(255,255,255,.9),rgba(220,252,231,.45));
+  }
+  .track::before{
+    content:"REDE IP";
+    position:absolute;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    color:#94a3b8;
+    font-size:42px;font-weight:800;
+    letter-spacing:5px;
+  }
+  .packet{
+    position:absolute;
+    left:3%;
+    top:18px;
+    width:88px;
+    padding:7px 5px;
+    text-align:center;
+    border-radius:9px;
+    background:var(--purple);
+    color:white;
+    font-weight:700;
+    box-shadow:0 4px 12px rgba(0,0,0,.16);
+    transition:left .9s ease, top .3s ease, opacity .3s;
+    z-index:2;
+  }
+  .packet .tiny{font-size:11px;font-weight:400;display:block}
+  .packet.arrived{left:77%}
+  .packet.drop{
+    left:47%;
+    top:175px !important;
+    opacity:.18;
+    background:var(--red)
+  }
+  .status{
+    margin-top:12px;
+    border-left:5px solid var(--blue);
+    background:#eff6ff;
+    padding:11px 13px;
+    border-radius:8px;
+    min-height:66px;
+    line-height:1.35;
+  }
+  .status strong{display:block;margin-bottom:3px}
+  .stepbar{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+  }
+  .step{
+    padding:9px;
+    text-align:center;
+    border-radius:9px;
+    background:#e8edf5;
+    color:#64748b;
+    font-weight:700;
+  }
+  .step.active{background:var(--blue);color:white}
+  .step.done{background:var(--green);color:white}
+  .explain{
+    margin-top:18px;
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:12px;
+  }
+  .tip{
+    background:white;border:1px solid var(--line);border-radius:12px;padding:14px
+  }
+  .tip b{display:block;margin-bottom:5px}
+  .seq-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:9px;
+    font-size:14px
+  }
+  .seq-table th,.seq-table td{
+    padding:6px;border-bottom:1px solid #dbe3ef;text-align:left
+  }
+  .ok{color:var(--green);font-weight:700}
+  .bad{color:var(--red);font-weight:700}
+  @media(max-width:900px){
+    .toolbar{grid-template-columns:1fr}
+    .network{grid-template-columns:1fr}
+    .host,.route{min-height:auto}
+    .track{height:220px}
+    .explain{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>TCP: Segmentação e Remontagem</h1>
+  <div class="subtitle">
+    Simulação didática do processo em que uma mensagem da aplicação é dividida em segmentos TCP,
+    transportada pela rede e remontada no destino usando números de sequência.
+  </div>
+
+  <section class="toolbar">
+    <div>
+      <label for="message">Mensagem da aplicação</label>
+      <input id="message" value="TRANSFERINDO DADOS COM TCP DE FORMA CONFIAVEL">
+    </div>
+    <div>
+      <label for="size">Dados por segmento</label>
+      <select id="size">
+        <option value="4">4 caracteres</option>
+        <option value="6" selected>6 caracteres</option>
+        <option value="8">8 caracteres</option>
+        <option value="10">10 caracteres</option>
+      </select>
+    </div>
+    <div class="buttons">
+      <button id="segmentBtn">1. Segmentar</button>
+      <button id="sendBtn" disabled>2. Enviar</button>
+      <button id="shuffleBtn" class="secondary" disabled>Embaralhar chegada</button>
+      <button id="lossBtn" class="warn" disabled>Simular perda</button>
+      <button id="resetBtn" class="light">Reiniciar</button>
+    </div>
+  </section>
+
+  <div class="legend">
+    <span class="key"><span class="dot" style="background:#ede9fe;border:2px solid #7c3aed"></span>Segmento criado</span>
+    <span class="key"><span class="dot" style="background:#dcfce7;border:2px solid #15803d"></span>Segmento recebido</span>
+    <span class="key"><span class="dot" style="background:#fee2e2;border:2px solid #b91c1c"></span>Segmento perdido</span>
+  </div>
+
+  <div class="network">
+    <section class="panel host">
+      <h2>💻 Computador de origem</h2>
+
+      <div class="layer app">
+        <b>Camada de Aplicação</b><br>
+        <small>Entrega os dados ao TCP.</small>
+        <div class="message-box" id="sourceMessage"></div>
+      </div>
+
+      <div class="layer tcp">
+        <b>Camada de Transporte — TCP</b><br>
+        <small>Divide os dados e adiciona informações de controle.</small>
+        <div class="segments" id="sourceSegments"></div>
+      </div>
+    </section>
+
+    <section class="panel route">
+      <h2>🌐 Transporte pela rede</h2>
+      <div class="track" id="track"></div>
+      <div class="status" id="status" aria-live="polite">
+        <strong>Etapa inicial</strong>
+        Clique em <b>Segmentar</b> para o TCP dividir a mensagem em partes menores.
+      </div>
+    </section>
+
+    <section class="panel host">
+      <h2>🖥️ Computador de destino</h2>
+
+      <div class="layer tcp">
+        <b>Camada de Transporte — TCP</b><br>
+        <small>Recebe, confere e ordena os segmentos pelo número de sequência.</small>
+        <div class="segments" id="destSegments"></div>
+        <table class="seq-table">
+          <thead><tr><th>SEQ</th><th>Estado</th></tr></thead>
+          <tbody id="seqBody"></tbody>
+        </table>
+      </div>
+
+      <div class="layer app">
+        <b>Camada de Aplicação</b><br>
+        <small>Recebe a mensagem remontada.</small>
+        <div class="message-box" id="rebuilt">Aguardando segmentos...</div>
+      </div>
+    </section>
+  </div>
+
+  <div class="stepbar">
+    <div class="step active" id="s0">1. Dados</div>
+    <div class="step" id="s1">2. Segmentação</div>
+    <div class="step" id="s2">3. Transporte</div>
+    <div class="step" id="s3">4. Remontagem</div>
+  </div>
+
+  <section class="explain">
+    <div class="tip">
+      <b>1 — Segmentação</b>
+      O TCP divide um fluxo de dados grande em segmentos menores para transporte.
+    </div>
+    <div class="tip">
+      <b>2 — Número de sequência</b>
+      Cada segmento possui uma posição lógica. Mesmo que chegue fora de ordem,
+      o receptor sabe onde colocá-lo.
+    </div>
+    <div class="tip">
+      <b>3 — Confiabilidade</b>
+      Se um segmento não chegar, o TCP pode solicitar/reexecutar sua transmissão
+      antes de entregar os dados completos à aplicação.
+    </div>
+  </section>
+</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const message = $('message');
+  const size = $('size');
+  const sourceMessage = $('sourceMessage');
+  const sourceSegments = $('sourceSegments');
+  const destSegments = $('destSegments');
+  const track = $('track');
+  const status = $('status');
+  const rebuilt = $('rebuilt');
+  const seqBody = $('seqBody');
+
+  const segmentBtn = $('segmentBtn');
+  const sendBtn = $('sendBtn');
+  const shuffleBtn = $('shuffleBtn');
+  const lossBtn = $('lossBtn');
+  const resetBtn = $('resetBtn');
+
+  let segments = [];
+  let arrivalOrder = [];
+  let lostIndex = null;
+  let timers = [];
+
+  function clearTimers(){
+    timers.forEach(clearTimeout);
+    timers = [];
+  }
+
+  function setStep(n){
+    for(let i=0;i<4;i++){
+      const el = $('s'+i);
+      el.classList.remove('active','done');
+      if(i<n) el.classList.add('done');
+      else if(i===n) el.classList.add('active');
+    }
+  }
+
+  function updateSource(){
+    sourceMessage.textContent = message.value || '(mensagem vazia)';
+  }
+
+  function makeSegments(){
+    clearTimers();
+    track.innerHTML = '';
+    destSegments.innerHTML = '';
+    seqBody.innerHTML = '';
+    rebuilt.textContent = 'Aguardando segmentos...';
+    lostIndex = null;
+
+    const text = message.value;
+    const chunk = Number(size.value);
+
+    if(!text.trim()){
+      status.innerHTML = '<strong>Mensagem inválida</strong>Digite algum conteúdo antes de segmentar.';
+      return;
+    }
+
+    segments = [];
+    for(let i=0, seq=1; i<text.length; i+=chunk, seq++){
+      segments.push({
+        seq,
+        start:i,
+        data:text.slice(i,i+chunk),
+        received:false
+      });
+    }
+    arrivalOrder = segments.map((_,i)=>i);
+
+    sourceSegments.innerHTML = '';
+    segments.forEach(seg=>{
+      const el=document.createElement('div');
+      el.className='segment';
+      el.innerHTML=`SEQ ${seg.seq}<span class="payload">${escapeHtml(seg.data)}</span>`;
+      sourceSegments.appendChild(el);
+    });
+
+    fillSeqTable();
+    sendBtn.disabled=false;
+    shuffleBtn.disabled=false;
+    lossBtn.disabled=false;
+    setStep(1);
+
+    status.innerHTML =
+      `<strong>Segmentação concluída</strong>
+       A mensagem foi dividida em <b>${segments.length} segmentos</b>.
+       Cada bloco recebeu um número de sequência (SEQ).`;
+  }
+
+  function escapeHtml(text){
+    return text.replace(/[&<>"']/g, m=>({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+    }[m]));
+  }
+
+  function fillSeqTable(){
+    seqBody.innerHTML='';
+    segments.forEach((seg,idx)=>{
+      const tr=document.createElement('tr');
+      let state='Aguardando';
+      let cls='';
+      if(idx===lostIndex && !seg.received){state='Perdido';cls='bad';}
+      else if(seg.received){state='Recebido';cls='ok';}
+      tr.innerHTML=`<td>${seg.seq}</td><td class="${cls}">${state}</td>`;
+      seqBody.appendChild(tr);
+    });
+  }
+
+  function shuffle(){
+    for(let i=arrivalOrder.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arrivalOrder[i],arrivalOrder[j]]=[arrivalOrder[j],arrivalOrder[i]];
+    }
+    status.innerHTML =
+      '<strong>Ordem de chegada alterada</strong>Os segmentos poderão chegar fora de ordem. O TCP usará o SEQ para remontar a mensagem corretamente.';
+  }
+
+  function simulateLoss(){
+    if(!segments.length) return;
+    lostIndex=Math.floor(Math.random()*segments.length);
+    status.innerHTML =
+      `<strong>Perda configurada</strong>O segmento <b>SEQ ${segments[lostIndex].seq}</b> será perdido na primeira tentativa e depois retransmitido.`;
+    fillSeqTable();
+  }
+
+  function send(){
+    if(!segments.length) return;
+    clearTimers();
+    track.innerHTML='';
+    destSegments.innerHTML='';
+    segments.forEach(s=>s.received=false);
+    rebuilt.textContent='Recebendo dados...';
+    fillSeqTable();
+    setStep(2);
+
+    segmentBtn.disabled=true;
+    sendBtn.disabled=true;
+    shuffleBtn.disabled=true;
+    lossBtn.disabled=true;
+
+    status.innerHTML =
+      '<strong>Transmissão iniciada</strong>Observe os segmentos atravessando a rede. A chegada pode ocorrer fora de ordem.';
+
+    arrivalOrder.forEach((segIndex, orderPos)=>{
+      const seg=segments[segIndex];
+      const p=document.createElement('div');
+      p.className='packet';
+      p.style.top=(18 + (orderPos%5)*42)+'px';
+      p.innerHTML=`SEQ ${seg.seq}<span class="tiny">${escapeHtml(seg.data)}</span>`;
+      track.appendChild(p);
+
+      timers.push(setTimeout(()=>p.classList.add('arrived'), 250 + orderPos*650));
+
+      timers.push(setTimeout(()=>{
+        if(segIndex===lostIndex){
+          p.classList.remove('arrived');
+          p.classList.add('drop');
+          status.innerHTML =
+            `<strong>⚠ Segmento perdido</strong>SEQ ${seg.seq} não chegou. O receptor ainda não pode entregar a mensagem completa.`;
+          fillSeqTable();
+
+          timers.push(setTimeout(()=>{
+            const r=document.createElement('div');
+            r.className='packet';
+            r.style.top=p.style.top;
+            r.innerHTML=`SEQ ${seg.seq}<span class="tiny">RETRANSMISSÃO</span>`;
+            track.appendChild(r);
+            status.innerHTML =
+              `<strong>↻ Retransmissão</strong>O TCP está enviando novamente o segmento SEQ ${seg.seq}.`;
+            requestAnimationFrame(()=>setTimeout(()=>r.classList.add('arrived'),60));
+            timers.push(setTimeout(()=>{
+              receive(segIndex);
+              maybeFinish();
+            },1050));
+          },850));
+        }else{
+          receive(segIndex);
+          maybeFinish();
+        }
+      }, 1200 + orderPos*650));
+    });
+  }
+
+  function receive(index){
+    const seg=segments[index];
+    if(seg.received) return;
+    seg.received=true;
+
+    const el=document.createElement('div');
+    el.className='segment received';
+    el.dataset.seq=seg.seq;
+    el.innerHTML=`SEQ ${seg.seq}<span class="payload">${escapeHtml(seg.data)}</span>`;
+    destSegments.appendChild(el);
+    fillSeqTable();
+
+    status.innerHTML =
+      `<strong>Segmento recebido</strong>SEQ ${seg.seq} chegou ao destino. O TCP guarda o segmento até poder ordenar todos os dados.`;
+  }
+
+  function maybeFinish(){
+    if(!segments.every(s=>s.received)) return;
+
+    timers.push(setTimeout(()=>{
+      setStep(3);
+
+      const nodes=[...destSegments.children];
+      nodes.sort((a,b)=>Number(a.dataset.seq)-Number(b.dataset.seq));
+      nodes.forEach(n=>destSegments.appendChild(n));
+
+      const text=[...segments]
+        .sort((a,b)=>a.seq-b.seq)
+        .map(s=>s.data)
+        .join('');
+
+      rebuilt.textContent=text;
+      status.innerHTML =
+        `<strong>✅ Remontagem concluída</strong>
+         Todos os segmentos foram ordenados pelos números de sequência.
+         A camada TCP entrega novamente o fluxo original à aplicação.`;
+
+      segmentBtn.disabled=false;
+      sendBtn.disabled=false;
+      shuffleBtn.disabled=false;
+      lossBtn.disabled=false;
+    },500));
+  }
+
+  function reset(){
+    clearTimers();
+    segments=[];
+    arrivalOrder=[];
+    lostIndex=null;
+    sourceSegments.innerHTML='';
+    destSegments.innerHTML='';
+    seqBody.innerHTML='';
+    track.innerHTML='';
+    rebuilt.textContent='Aguardando segmentos...';
+    sendBtn.disabled=true;
+    shuffleBtn.disabled=true;
+    lossBtn.disabled=true;
+    segmentBtn.disabled=false;
+    setStep(0);
+    updateSource();
+    status.innerHTML =
+      '<strong>Etapa inicial</strong>Clique em <b>Segmentar</b> para o TCP dividir a mensagem em partes menores.';
+  }
+
+  message.addEventListener('input', updateSource);
+  segmentBtn.addEventListener('click', makeSegments);
+  sendBtn.addEventListener('click', send);
+  shuffleBtn.addEventListener('click', shuffle);
+  lossBtn.addEventListener('click', simulateLoss);
+  resetBtn.addEventListener('click', reset);
+
+  updateSource();
+})();
+</script>
+</body>
+</html>
