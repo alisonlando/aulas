@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sequência de atividades práticas com Wokwi, ESP32 e MicroPython." />
+  <title>Laboratório Wokwi + ESP32 + MicroPython</title>
+
+  <style>
+    :root{
+      --bg:#0b1020;
+      --bg-soft:#10172a;
+      --panel:#121a31;
+      --panel-2:#182241;
+      --text:#eef3ff;
+      --muted:#aab6d3;
+      --accent:#6ee7ff;
+      --accent-2:#7c8cff;
+      --ok:#45d483;
+      --warn:#ffd166;
+      --danger:#ff6b6b;
+      --border:rgba(255,255,255,.10);
+      --shadow:0 18px 50px rgba(0,0,0,.28);
+      --code-bg:#070b16;
+      --code-text:#dff7ff;
+      --topbar:rgba(11,16,32,.82);
+      --radius:20px;
+    }
+
+    html[data-theme="light"]{
+      --bg:#f4f7fb;
+      --bg-soft:#edf2f8;
+      --panel:#ffffff;
+      --panel-2:#eef3fb;
+      --text:#182238;
+      --muted:#5f6f89;
+      --accent:#006d8f;
+      --accent-2:#4f5fc7;
+      --ok:#1f9d5d;
+      --warn:#b27a00;
+      --danger:#c83a3a;
+      --border:rgba(24,34,56,.12);
+      --shadow:0 16px 42px rgba(24,34,56,.10);
+      --code-bg:#152033;
+      --code-text:#f3f8ff;
+      --topbar:rgba(255,255,255,.88);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, color-mix(in srgb, var(--accent-2) 18%, transparent), transparent 30%),
+        radial-gradient(circle at top left, color-mix(in srgb, var(--accent) 10%, transparent), transparent 28%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.6;
+      transition:background .25s ease,color .25s ease;
+    }
+
+    a{color:inherit}
+    button,input{font:inherit}
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:1000;
+      backdrop-filter:blur(14px);
+      background:var(--topbar);
+      border-bottom:1px solid var(--border);
+    }
+
+    .topbar-inner{
+      max-width:1200px;
+      margin:auto;
+      padding:14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:800;
+      letter-spacing:.2px;
+    }
+
+    .brand-badge{
+      width:38px;
+      height:38px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      background:linear-gradient(135deg,var(--accent),var(--accent-2));
+      color:#07111c;
+      font-weight:900;
+      box-shadow:0 8px 24px color-mix(in srgb, var(--accent) 22%, transparent);
+    }
+
+    .top-actions{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .theme-toggle{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border:1px solid var(--border);
+      background:var(--panel);
+      color:var(--text);
+      border-radius:999px;
+      padding:8px 12px;
+      cursor:pointer;
+      font-weight:700;
+      box-shadow:0 6px 18px rgba(0,0,0,.06);
+    }
+
+    .theme-toggle:hover{
+      filter:brightness(1.04);
+    }
+
+    .progress-wrap{
+      min-width:250px;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    .progress{
+      flex:1;
+      height:10px;
+      background:var(--bg-soft);
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid var(--border);
+    }
+
+    .progress > span{
+      display:block;
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg,var(--accent),var(--ok));
+      transition:width .3s ease;
+    }
+
+    .hero{
+      max-width:1200px;
+      margin:auto;
+      padding:76px 20px 34px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.4fr .8fr;
+      gap:28px;
+      align-items:center;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:color-mix(in srgb, var(--accent) 8%, transparent);
+      color:var(--accent);
+      border:1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+      font-weight:700;
+      font-size:.88rem;
+    }
+
+    h1{
+      font-size:clamp(2.2rem,6vw,4.7rem);
+      line-height:1.02;
+      margin:18px 0;
+      letter-spacing:-.04em;
+    }
+
+    .lead{
+      color:var(--muted);
+      font-size:1.08rem;
+      max-width:760px;
+    }
+
+    .hero-card{
+      background:linear-gradient(180deg,var(--panel-2),var(--panel));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+
+    .hero-card h3{margin-top:0}
+    .hero-card ul{padding-left:20px;color:var(--muted)}
+
+    .layout{
+      max-width:1200px;
+      margin:auto;
+      padding:0 20px 80px;
+      display:grid;
+      grid-template-columns:260px minmax(0,1fr);
+      gap:28px;
+    }
+
+    aside{
+      position:sticky;
+      top:84px;
+      align-self:start;
+    }
+
+    .side-card{
+      background:color-mix(in srgb, var(--panel) 92%, transparent);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+      box-shadow:var(--shadow);
+    }
+
+    .side-card strong{
+      display:block;
+      padding:8px 10px;
+      margin-bottom:4px;
+    }
+
+    .nav-link{
+      display:block;
+      text-decoration:none;
+      color:var(--muted);
+      padding:9px 10px;
+      border-radius:10px;
+      font-size:.94rem;
+      transition:.2s;
+    }
+
+    .nav-link:hover,.nav-link.active{
+      background:color-mix(in srgb, var(--accent) 9%, transparent);
+      color:var(--text);
+    }
+
+    main{min-width:0}
+
+    .intro-table{
+      width:100%;
+      border-collapse:collapse;
+      margin:18px 0 34px;
+      overflow:hidden;
+      border-radius:14px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      box-shadow:0 8px 28px rgba(0,0,0,.05);
+    }
+
+    .intro-table th,.intro-table td{
+      text-align:left;
+      padding:13px 14px;
+      border-bottom:1px solid var(--border);
+      vertical-align:top;
+    }
+
+    .intro-table th{
+      background:color-mix(in srgb, var(--accent-2) 8%, var(--panel));
+      color:var(--text);
+    }
+
+    .activity{
+      background:linear-gradient(180deg,var(--panel),color-mix(in srgb, var(--panel) 88%, var(--bg)));
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      margin:0 0 24px;
+      overflow:hidden;
+      box-shadow:var(--shadow);
+    }
+
+    .activity-header{
+      padding:22px;
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:16px;
+      cursor:pointer;
+    }
+
+    .activity-title{
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+    }
+
+    .num{
+      flex:0 0 42px;
+      width:42px;
+      height:42px;
+      border-radius:13px;
+      display:grid;
+      place-items:center;
+      font-weight:900;
+      background:linear-gradient(135deg,var(--accent-2),var(--accent));
+      color:#07111c;
+    }
+
+    .activity h2{
+      margin:0;
+      font-size:1.35rem;
+    }
+
+    .activity-sub{
+      color:var(--muted);
+      margin-top:4px;
+      font-size:.96rem;
+    }
+
+    .activity-body{
+      padding:0 22px 24px 78px;
+      display:block;
+    }
+
+    .activity.collapsed .activity-body{display:none}
+    .chev{transition:.2s;color:var(--muted)}
+    .activity.collapsed .chev{transform:rotate(-90deg)}
+
+    .badge{
+      display:inline-flex;
+      padding:5px 9px;
+      margin:3px 6px 3px 0;
+      border-radius:999px;
+      border:1px solid var(--border);
+      color:var(--text);
+      background:color-mix(in srgb, var(--panel-2) 75%, transparent);
+      font-size:.82rem;
+    }
+
+    .box{
+      border-left:4px solid var(--accent);
+      background:color-mix(in srgb, var(--accent) 7%, transparent);
+      padding:14px 16px;
+      margin:16px 0;
+      border-radius:0 12px 12px 0;
+    }
+
+    .challenge{
+      border-left-color:var(--warn);
+      background:color-mix(in srgb, var(--warn) 8%, transparent);
+    }
+
+    .question{
+      border-left-color:var(--accent-2);
+      background:color-mix(in srgb, var(--accent-2) 8%, transparent);
+    }
+
+    pre{
+      position:relative;
+      margin:14px 0;
+      padding:18px;
+      background:var(--code-bg);
+      color:var(--code-text);
+      border:1px solid var(--border);
+      border-radius:14px;
+      overflow:auto;
+      tab-size:4;
+    }
+
+    code{font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace}
+
+    .copy-btn{
+      position:absolute;
+      top:10px;
+      right:10px;
+      border:1px solid rgba(255,255,255,.14);
+      color:#fff;
+      background:#1a263d;
+      border-radius:9px;
+      padding:6px 9px;
+      cursor:pointer;
+      font-size:.82rem;
+    }
+
+    .copy-btn:hover{filter:brightness(1.15)}
+
+    .checkline{
+      margin-top:18px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      color:var(--text);
+      font-weight:700;
+    }
+
+    .checkline input{
+      width:20px;
+      height:20px;
+      accent-color:var(--ok);
+    }
+
+    .final-project{
+      border:1px solid color-mix(in srgb, var(--ok) 30%, var(--border));
+      background:
+        linear-gradient(180deg,color-mix(in srgb, var(--ok) 6%, var(--panel)),transparent 24%),
+        linear-gradient(180deg,var(--panel),color-mix(in srgb, var(--panel) 88%, var(--bg)));
+    }
+
+    .flow{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:8px;
+      margin:18px 0;
+    }
+
+    .flow div{
+      text-align:center;
+      padding:12px 8px;
+      background:color-mix(in srgb, var(--accent-2) 8%, var(--panel));
+      border:1px solid var(--border);
+      border-radius:12px;
+      font-size:.86rem;
+    }
+
+    footer{
+      border-top:1px solid var(--border);
+      padding:28px 20px 50px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      background:linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--accent) 15%, var(--panel)),
+        color-mix(in srgb, var(--accent-2) 15%, var(--panel))
+      );
+      color:var(--text);
+      font-weight:700;
+    }
+
+    .btn:hover{filter:brightness(1.06)}
+
+    @media (max-width:900px){
+      .hero-grid,.layout{grid-template-columns:1fr}
+      aside{position:static}
+      .side-card{display:none}
+      .activity-body{padding-left:22px}
+      .progress-wrap{min-width:180px}
+      .flow{grid-template-columns:1fr}
+    }
+
+    @media (max-width:700px){
+      .topbar-inner{align-items:stretch;flex-direction:column}
+      .top-actions{justify-content:space-between}
+      .progress-wrap{width:100%;min-width:0}
+      .hero{padding-top:42px}
+    }
+
+    @media (max-width:620px){
+      .intro-table{font-size:.88rem}
+      .intro-table th:nth-child(4),
+      .intro-table td:nth-child(4){display:none}
+      .activity-header{padding:18px}
+      .activity-body{padding:0 18px 20px}
+      .activity-title{gap:10px}
+      .num{width:38px;height:38px;flex-basis:38px}
+    }
+  </style>
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-badge">µP</div>
+        <span>Wokwi + ESP32 + MicroPython</span>
+      </div>
+
+      <div class="top-actions">
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Alternar tema">
+          <span id="themeIcon">☀️</span>
+          <span id="themeText">Modo claro</span>
+        </button>
+
+        <div class="progress-wrap">
+          <span id="progressText">0/10 concluídas</span>
+          <div class="progress"><span id="progressBar"></span></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <span class="eyebrow">Laboratório de Sistemas Ciberfísicos</span>
+        <h1>Explorando o ESP32 no Wokwi</h1>
+        <p class="lead">
+          Uma sequência progressiva de atividades práticas para aprender MicroPython,
+          entradas e saídas digitais, ADC, PWM, sensores, barramentos e atuadores
+          por meio da simulação do ESP32 no Wokwi.
+        </p>
+      </div>
+
+      <div class="hero-card">
+        <h3>Objetivo do roteiro</h3>
+        <ul>
+          <li>Conhecer o ambiente Wokwi.</li>
+          <li>Programar o ESP32 com MicroPython.</li>
+          <li>Experimentar sensores e atuadores.</li>
+          <li>Relacionar software, eletrônica e sistemas ciberfísicos.</li>
+        </ul>
+        <button class="btn" onclick="expandAll()">Expandir todas as atividades</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <aside>
+      <div class="side-card">
+        <strong>Atividades</strong>
+        <a class="nav-link" href="#atividade1">1. Primeiro programa</a>
+        <a class="nav-link" href="#atividade2">2. LED piscante</a>
+        <a class="nav-link" href="#atividade3">3. Botão e LED</a>
+        <a class="nav-link" href="#atividade4">4. Semáforo</a>
+        <a class="nav-link" href="#atividade5">5. ADC</a>
+        <a class="nav-link" href="#atividade6">6. PWM</a>
+        <a class="nav-link" href="#atividade7">7. DHT22</a>
+        <a class="nav-link" href="#atividade8">8. OLED I²C</a>
+        <a class="nav-link" href="#atividade9">9. Servo</a>
+        <a class="nav-link" href="#atividade10">10. Projeto final</a>
+      </div>
+    </aside>
+
+    <main>
+      <table class="intro-table">
+        <thead>
+          <tr><th>Etapa</th><th>Atividade</th><th>Conceitos</th><th>Componentes</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Primeiro programa</td><td>Wokwi, ESP32, MicroPython</td><td>ESP32</td></tr>
+          <tr><td>2</td><td>LED piscante</td><td>GPIO e temporização</td><td>ESP32 + LED</td></tr>
+          <tr><td>3</td><td>Botão controlando LED</td><td>Entrada e saída digital</td><td>LED + botão</td></tr>
+          <tr><td>4</td><td>Semáforo</td><td>Sequência lógica</td><td>3 LEDs</td></tr>
+          <tr><td>5</td><td>Leitura analógica</td><td>ADC</td><td>Potenciômetro</td></tr>
+          <tr><td>6</td><td>Controle PWM</td><td>PWM e duty cycle</td><td>LED</td></tr>
+          <tr><td>7</td><td>Temperatura e umidade</td><td>Sensores digitais</td><td>DHT22</td></tr>
+          <tr><td>8</td><td>Display OLED</td><td>I²C</td><td>OLED</td></tr>
+          <tr><td>9</td><td>Controle de atuador</td><td>PWM e controle</td><td>Servo</td></tr>
+          <tr><td>10</td><td>Projeto integrador</td><td>Sensor → decisão → atuação</td><td>Vários</td></tr>
+        </tbody>
+      </table>
+
+      <section class="activity" id="atividade1">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">1</div>
+            <div>
+              <h2>Conhecendo o Wokwi e o ESP32</h2>
+              <div class="activity-sub">Familiarização com o ambiente e primeiro programa.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <span class="badge">Wokwi</span><span class="badge">ESP32</span><span class="badge">MicroPython</span>
+          <p><strong>Tarefa:</strong> crie um novo projeto ESP32 + MicroPython e identifique visualmente o ESP32, GPIOs, 3,3 V, GND, o arquivo <code>main.py</code> e o botão de iniciar/parar simulação.</p>
+          <pre><code>print("Olá, ESP32!")
+print("Minha primeira simulação no Wokwi")</code></pre>
+          <div class="box challenge"><strong>Desafio:</strong> modifique o programa para exibir seu nome, curso, turma e número da atividade.</div>
+          <label class="checkline"><input type="checkbox" data-activity="1"> Concluí a atividade 1</label>
+        </div>
+      </section>
+
+      <section class="activity" id="atividade2">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">2</div>
+            <div>
+              <h2>Primeira saída digital: LED</h2>
+              <div class="activity-sub">GPIO como saída digital e temporização.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p><strong>Montagem:</strong> GPIO 2 → resistor → LED → GND.</p>
+          <pre><code>from machine import Pin
+from time import sleep
+
+led = Pin(2, Pin.OUT)
+
+while True:
+    led.value(1)
+    sleep(1)
+    led.value(0)
+    sleep(1)</code></pre>
+          <div class="box challenge"><strong>Desafios:</strong> altere o intervalo para 0,5 s. Depois faça o LED piscar 3 vezes rapidamente e permanecer 2 segundos apagado.</div>
+          <div class="box question"><strong>Questão:</strong> o que representam os valores <code>0</code> e <code>1</code> enviados ao GPIO?</div>
+          <label class="checkline"><input type="checkbox" data-activity="2"> Concluí a atividade 2</label>
+        </div>
+      </section>
+
+      <section class="activity" id="atividade3">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">3</div>
+            <div>
+              <h2>Entrada digital: botão controlando LED</h2>
+              <div class="activity-sub">Leitura de GPIO, pull-up e tomada de decisão.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p><strong>Montagem:</strong> botão no GPIO 4 e LED no GPIO 2.</p>
+          <pre><code>from machine import Pin
+from time import sleep
+
+led = Pin(2, Pin.OUT)
+botao = Pin(4, Pin.IN, Pin.PULL_UP)
+
+while True:
+    if botao.value() == 0:
+        led.value(1)
+    else:
+        led.value(0)
+
+    sleep(0.05)</code></pre>
+          <div class="box challenge"><strong>Desafios:</strong> inverta o comportamento do LED e depois faça o LED mudar de estado a cada novo pressionamento.</div>
+          <label class="checkline"><input type="checkbox" data-activity="3"> Concluí a atividade 3</label>
+        </div>
+      </section>
+
+      <section class="activity" id="atividade4">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">4</div>
+            <div>
+              <h2>Construindo um semáforo</h2>
+              <div class="activity-sub">Lógica sequencial, temporização e estados.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p>Monte um semáforo com LEDs <strong>verde, amarelo e vermelho</strong>. O programa deverá implementar a sequência:</p>
+          <div class="flow">
+            <div>Verde<br><strong>5 s</strong></div>
+            <div>→</div>
+            <div>Amarelo<br><strong>2 s</strong></div>
+            <div>→</div>
+            <div>Vermelho<br><strong>5 s</strong></div>
+          </div>
+          <div class="box"><strong>Regra:</strong> nesta atividade, desenvolva o programa sem utilizar um código pronto.</div>
+          <div class="box challenge"><strong>Desafio:</strong> adicione um botão de pedestre e altere a sequência quando ele for pressionado.</div>
+          <label class="checkline"><input type="checkbox" data-activity="4"> Concluí a atividade 4</label>
+        </div>
+      </section>
+
+      <section class="activity" id="atividade5">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">5</div>
+            <div>
+              <h2>Explorando uma entrada analógica: ADC</h2>
+              <div class="activity-sub">Conversão analógico-digital e escala de valores.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p>Conecte um potenciômetro a um pino com ADC e observe como a leitura muda.</p>
+          <pre><code>from machine import ADC, Pin
+from time import sleep
+
+adc = ADC(Pin(34))
+
+while True:
+    valor = adc.read_u16()
+    print(valor)
+    sleep(0.5)</code></pre>
+          <p>Registre o valor mínimo e o valor máximo observados. Depois converta a leitura para uma porcentagem entre 0% e 100%.</p>
+          <div class="box question">
+            <strong>Relação:</strong><br>
+            0 → 0%<br>
+            65535 → 100%<br>
+            valor → ?
+          </div>
+          <label class="checkline"><input type="checkbox" data-activity="5"> Concluí a atividade 5</label>
+        </div>
+      </section>
+
+      <section class="activity" id="atividade6">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">6</div>
+            <div>
+              <h2>Saída PWM: controlando intensidade</h2>
+              <div class="activity-sub">PWM, frequência e ciclo de trabalho.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p>Utilize o potenciômetro da atividade anterior para controlar o brilho de um LED.</p>
+          <div class="flow">
+            <div>Potenciômetro</div><div>→</div><div>ADC</div><div>→</div><div>PWM / LED</div>
+          </div>
+          <div class="box challenge"><strong>Desafio:</strong> quanto maior a leitura do potenciômetro, maior deverá ser a intensidade luminosa do LED.</div>
+          <div class="box question"><strong>Questão:</strong> por que PWM permite controlar o brilho mesmo utilizando uma saída digital?</div>
+          <label class="checkline"><input type="checkbox" data-activity="6"> Concluí a atividade 6</label>
+        </div>
+      </section>
+
+      <section class="activity" id="atividade7">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">7</div>
+            <div>
+              <h2>Sensor de temperatura e umidade</h2>
+              <div class="activity-sub">Aquisição de dados com DHT22.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p>Adicione um sensor DHT22 e faça o terminal apresentar temperatura e umidade.</p>
+          <pre><code>Temperatura: 24.5 °C
+Umidade: 62 %</code></pre>
+          <p>Depois classifique a temperatura:</p>
+          <table class="intro-table">
+            <thead><tr><th>Faixa</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr><td>&lt; 20 °C</td><td>FRIO</td></tr>
+              <tr><td>20 °C a 28 °C</td><td>NORMAL</td></tr>
+              <tr><td>&gt; 28 °C</td><td>QUENTE</td></tr>
+            </tbody>
+          </table>
+          <div class="box challenge"><strong>Desafio:</strong> acenda um LED vermelho quando a temperatura ultrapassar 28 °C.</div>
+          <label class="checkline"><input type="checkbox" data-activity="7"> Concluí a atividade 7</label>
+        </div>
+      </section>
+
+      <section class="activity" id="atividade8">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">8</div>
+            <div>
+              <h2>Display OLED e comunicação I²C</h2>
+              <div class="activity-sub">SDA, SCL, barramento e endereço de dispositivo.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p>Adicione um display OLED e apresente as informações do sensor.</p>
+          <pre><code>SISTEMA ESP32
+
+Temp: 25.2 C
+Umid: 61 %</code></pre>
+          <div class="box"><strong>Antes de programar o display:</strong> execute um scanner I²C para descobrir o endereço do dispositivo.</div>
+          <div class="box question"><strong>Questão:</strong> qual é a função dos sinais SDA e SCL?</div>
+          <label class="checkline"><input type="checkbox" data-activity="8"> Concluí a atividade 8</label>
+        </div>
+      </section>
+
+      <section class="activity" id="atividade9">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">9</div>
+            <div>
+              <h2>Controlando um atuador</h2>
+              <div class="activity-sub">Servo motor, posição e controle.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p>Adicione um servo motor e controle inicialmente três posições: <strong>0°, 90° e 180°</strong>.</p>
+          <p>Depois utilize um potenciômetro para controlar continuamente a posição do servo.</p>
+          <div class="box question">
+            0% → 0°<br>
+            50% → 90°<br>
+            100% → 180°
+          </div>
+          <div class="box challenge"><strong>Desafio:</strong> desenvolva a conversão entre o valor lido no ADC e o ângulo desejado do servo.</div>
+          <label class="checkline"><input type="checkbox" data-activity="9"> Concluí a atividade 9</label>
+        </div>
+      </section>
+
+      <section class="activity final-project" id="atividade10">
+        <div class="activity-header" onclick="toggleActivity(this)">
+          <div class="activity-title">
+            <div class="num">10</div>
+            <div>
+              <h2>Projeto integrador: sistema ciberfísico</h2>
+              <div class="activity-sub">Integração entre sensor, processamento, decisão e atuação.</div>
+            </div>
+          </div>
+          <div class="chev">▼</div>
+        </div>
+        <div class="activity-body">
+          <p>Desenvolva um sistema de monitoramento de temperatura de uma sala utilizando ESP32 e MicroPython.</p>
+          <p><strong>Componentes:</strong> ESP32, DHT22, LED verde, LED amarelo, LED vermelho, display OLED e botão.</p>
+          <table class="intro-table">
+            <thead><tr><th>Temperatura</th><th>Estado</th><th>LED</th></tr></thead>
+            <tbody>
+              <tr><td>&lt; 20 °C</td><td>FRIO</td><td>Amarelo</td></tr>
+              <tr><td>20–28 °C</td><td>NORMAL</td><td>Verde</td></tr>
+              <tr><td>&gt; 28 °C</td><td>QUENTE</td><td>Vermelho</td></tr>
+            </tbody>
+          </table>
+          <p>O display deverá apresentar:</p>
+          <pre><code>Temperatura: 29.4 C
+Umidade: 58 %
+Estado: QUENTE</code></pre>
+          <div class="flow">
+            <div>SENSOR</div><div>AQUISIÇÃO</div><div>PROCESSAMENTO</div><div>DECISÃO</div><div>ATUAÇÃO</div>
+          </div>
+          <div class="box challenge"><strong>Desafio adicional:</strong> utilize o botão para alternar as informações apresentadas no display.</div>
+          <label class="checkline"><input type="checkbox" data-activity="10"> Concluí a atividade 10</label>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>Roteiro de laboratório — Wokwi, ESP32 e MicroPython.</p>
+    <p>O progresso e o tema escolhido ficam salvos localmente neste navegador.</p>
+  </footer>
+
+  <script>
+    const root = document.documentElement;
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const themeText = document.getElementById('themeText');
+
+    function applyTheme(theme){
+      root.setAttribute('data-theme', theme);
+      localStorage.setItem('wokwi-theme', theme);
+
+      if(theme === 'dark'){
+        themeIcon.textContent = '☀️';
+        themeText.textContent = 'Modo claro';
+      } else {
+        themeIcon.textContent = '🌙';
+        themeText.textContent = 'Modo escuro';
+      }
+    }
+
+    const savedTheme = localStorage.getItem('wokwi-theme');
+    const preferredTheme = savedTheme
+      ? savedTheme
+      : (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+
+    applyTheme(preferredTheme);
+
+    themeToggle.addEventListener('click', () => {
+      const current = root.getAttribute('data-theme');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    function toggleActivity(header){
+      header.parentElement.classList.toggle('collapsed');
+    }
+
+    function expandAll(){
+      document.querySelectorAll('.activity').forEach(a => a.classList.remove('collapsed'));
+    }
+
+    function updateProgress(){
+      const boxes = [...document.querySelectorAll('input[type="checkbox"][data-activity]')];
+      const done = boxes.filter(b => b.checked).length;
+      const pct = (done / boxes.length) * 100;
+
+      document.getElementById('progressText').textContent = `${done}/${boxes.length} concluídas`;
+      document.getElementById('progressBar').style.width = pct + '%';
+
+      boxes.forEach(b => {
+        localStorage.setItem(
+          'wokwi-atividade-' + b.dataset.activity,
+          b.checked ? '1' : '0'
+        );
+      });
+    }
+
+    document.querySelectorAll('input[type="checkbox"][data-activity]').forEach(box => {
+      box.checked = localStorage.getItem('wokwi-atividade-' + box.dataset.activity) === '1';
+      box.addEventListener('change', updateProgress);
+    });
+
+    updateProgress();
+
+    document.querySelectorAll('pre').forEach(pre => {
+      const button = document.createElement('button');
+      button.className = 'copy-btn';
+      button.textContent = 'Copiar';
+
+      button.addEventListener('click', async () => {
+        const code = pre.querySelector('code').innerText;
+
+        try{
+          await navigator.clipboard.writeText(code);
+          button.textContent = 'Copiado!';
+        }catch{
+          button.textContent = 'Selecione e copie';
+        }
+
+        setTimeout(() => button.textContent = 'Copiar', 1400);
+      });
+
+      pre.appendChild(button);
+    });
+
+    const sections = [...document.querySelectorAll('.activity')];
+    const links = [...document.querySelectorAll('.nav-link')];
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          links.forEach(l => l.classList.remove('active'));
+
+          const target = links.find(
+            l => l.getAttribute('href') === '#' + entry.target.id
+          );
+
+          if(target) target.classList.add('active');
+        }
+      });
+    }, {
+      rootMargin:'-25% 0px -60% 0px',
+      threshold:0
+    });
+
+    sections.forEach(s => observer.observe(s));
+  </script>
+</body>
+</html>
