@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laboratório Bitwise</title>
+  <style>
+    :root{--bg:#07101f;--panel:#0e1b30;--line:#243754;--text:#eef6ff;--muted:#9db0ca;--cyan:#36d9ff;--green:#6ef2a2;--yellow:#ffd166;--pink:#ff6ba8;--red:#ff6b6b}
+    *{box-sizing:border-box} body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(circle at 12% 8%,#17345a 0,transparent 32%),radial-gradient(circle at 90% 90%,#163b38 0,transparent 30%),var(--bg);font-family:Inter,Segoe UI,Arial,sans-serif}
+    button,input{font:inherit}.wrap{width:min(1180px,94vw);margin:auto;padding:28px 0 50px}.hero{text-align:center;margin-bottom:22px}.hero h1{font-size:clamp(2rem,5vw,3.5rem);margin:0;letter-spacing:-.04em}.hero h1 span{color:var(--cyan)}.hero p{color:var(--muted);margin:9px 0 0}.card{background:rgba(14,27,48,.92);border:1px solid var(--line);border-radius:20px;box-shadow:0 22px 60px #0007;padding:22px;margin-top:16px;backdrop-filter:blur(10px)}
+    .operators{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.op{border:1px solid var(--line);background:#101f36;color:var(--muted);padding:13px;border-radius:12px;cursor:pointer;font-weight:800;transition:.2s}.op:hover{transform:translateY(-2px);border-color:var(--cyan)}.op.active{background:var(--cyan);color:#03101a;border-color:var(--cyan);box-shadow:0 0 24px #36d9ff55}.op code{font-size:1.15em}
+    .inputs{display:grid;grid-template-columns:1fr 1fr auto;gap:14px;align-items:end;margin-top:20px}.field label{display:block;color:var(--muted);font-size:.82rem;margin:0 0 7px}.field input{width:100%;background:#071426;color:white;border:1px solid var(--line);border-radius:11px;padding:12px 14px;outline:0}.field input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px #36d9ff20}.random{background:#22334d;color:white;border:1px solid #38506f;border-radius:11px;padding:12px 17px;cursor:pointer}.hidden{display:none!important}
+    .formats{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px;font-family:Consolas,monospace;font-size:.78rem}.tag{padding:5px 8px;border-radius:7px;background:#071426;color:var(--muted);border:1px solid #1b304d}.error{color:var(--red);font-size:.82rem;min-height:18px;margin-top:8px}
+    .lesson{display:grid;grid-template-columns:1fr 300px;gap:18px;align-items:stretch}.stage{overflow-x:auto}.bit-grid{min-width:680px;display:grid;grid-template-columns:74px repeat(8,1fr);gap:7px;align-items:center}.place{text-align:center;color:#68809f;font:700 .72rem Consolas}.row-label{text-align:right;padding-right:8px;color:var(--muted);font-weight:800}.bit{height:54px;display:grid;place-items:center;background:#071426;border:1px solid var(--line);border-radius:10px;font:800 1.25rem Consolas;transition:.25s}.bit.one{color:var(--green);border-color:#2d7d5a}.bit.zero{color:#8191a8}.bit.current{transform:translateY(-4px) scale(1.05);border-color:var(--yellow);box-shadow:0 0 18px #ffd16655}.bit.done{background:#102e32}.result .bit{border-color:#365879}.result .bit.one{background:#123b31;color:#8dffc0}.result .bit.zero{background:#1b2638;color:#aebed4}.symbol{text-align:center;color:var(--yellow);font:900 1.5rem Consolas}
+    .side{border:1px solid var(--line);border-radius:15px;background:#081526;padding:18px}.side h2{font-size:1.05rem;margin:0 0 8px}.side p{color:var(--muted);line-height:1.5;font-size:.92rem}.equation{background:#030b16;border-radius:10px;padding:13px;text-align:center;color:var(--yellow);font:800 1.25rem Consolas;margin:14px 0}.truth{width:100%;border-collapse:collapse;text-align:center;font:700 .88rem Consolas}.truth th,.truth td{border-bottom:1px solid #223654;padding:8px}.truth tr.hot td{background:#284229;color:#fff}.truth th{color:var(--cyan)}
+    .controls{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:18px}.controls button{border:1px solid var(--line);border-radius:10px;padding:10px 15px;background:#172740;color:white;cursor:pointer}.controls .play{background:var(--green);color:#06160d;border-color:var(--green);font-weight:900}.controls button:disabled{opacity:.4;cursor:not-allowed}.progress{height:5px;background:#182a43;border-radius:9px;overflow:hidden;margin-top:16px}.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--cyan),var(--green));transition:.25s}
+    .answer{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric{background:#081526;border:1px solid var(--line);border-radius:12px;padding:14px}.metric small{display:block;color:var(--muted);margin-bottom:6px}.metric strong{font:800 clamp(.9rem,2vw,1.2rem) Consolas;color:var(--green);overflow-wrap:anywhere}.rule{margin:14px 0 0;color:var(--muted);line-height:1.55}.rule b{color:var(--text)}
+    @media(max-width:800px){.lesson{grid-template-columns:1fr}.inputs{grid-template-columns:1fr 1fr}.random{grid-column:1/-1}.answer{grid-template-columns:1fr 1fr}}@media(max-width:520px){.operators{grid-template-columns:1fr 1fr}.inputs,.answer{grid-template-columns:1fr}.wrap{width:96vw}.card{padding:14px}}
+  </style>
+</head>
+<body>
+<main class="wrap">
+  <header class="hero"><h1>Laboratório <span>Bitwise</span></h1><p>Veja cada operador trabalhar diretamente nos bits de um número.</p></header>
+  <section class="card">
+    <nav class="operators" aria-label="Escolha do operador">
+      <button class="op active" data-op="AND">AND <code>&amp;</code></button><button class="op" data-op="OR">OR <code>|</code></button><button class="op" data-op="XOR">XOR <code>^</code></button><button class="op" data-op="NOT">NOT <code>~</code></button>
+    </nav>
+    <div class="inputs">
+      <div class="field"><label for="inputA">Valor A (0 a 255)</label><input id="inputA" type="number" min="0" max="255" value="170"><div class="formats" id="formatsA"></div></div>
+      <div class="field" id="fieldB"><label for="inputB">Valor B (0 a 255)</label><input id="inputB" type="number" min="0" max="255" value="204"><div class="formats" id="formatsB"></div></div>
+      <button class="random" id="random">⚄ Sortear valores</button>
+    </div><div class="error" id="error" role="alert"></div>
+  </section>
+  <section class="card lesson">
+    <div class="stage">
+      <div class="bit-grid" id="bitGrid"></div>
+      <div class="controls"><button id="reset">↺ Reiniciar</button><button id="prev">← Anterior</button><button class="play" id="play">▶ Animar</button><button id="next">Próximo →</button></div>
+      <div class="progress"><i id="progress"></i></div>
+    </div>
+    <aside class="side"><h2 id="sideTitle">Regra do AND</h2><p id="description"></p><div class="equation" id="equation">A &amp; B = R</div><table class="truth" id="truth"></table></aside>
+  </section>
+  <section class="card"><div class="answer"><div class="metric"><small>Binário (8 bits)</small><strong id="resBin"></strong></div><div class="metric"><small>Decimal</small><strong id="resDec"></strong></div><div class="metric"><small>Hexadecimal</small><strong id="resHex"></strong></div><div class="metric"><small>Expressão</small><strong id="resExpr"></strong></div></div><p class="rule" id="rule"></p></section>
+</main>
+<script>
+  const info={
+    AND:{symbol:'&',name:'AND',desc:'O resultado é 1 somente quando os dois bits são 1.',rule:'Use AND para <b>mascarar bits</b>, mantendo apenas as posições desejadas.'},
+    OR:{symbol:'|',name:'OR',desc:'O resultado é 1 quando pelo menos um dos bits é 1.',rule:'Use OR para <b>ligar bits</b> específicos sem desligar os demais.'},
+    XOR:{symbol:'^',name:'XOR',desc:'O resultado é 1 quando os bits são diferentes.',rule:'Use XOR para <b>alternar bits</b> e detectar diferenças.'},
+    NOT:{symbol:'~',name:'NOT',desc:'Inverte cada bit: 0 vira 1 e 1 vira 0.',rule:'Use NOT para <b>inverter todos os bits</b>. Aqui o resultado é limitado a 8 bits.'}
+  };
+  const $=id=>document.getElementById(id); let op='AND',step=-1,timer=null;
+  const clamp=v=>Math.max(0,Math.min(255,Number(v)||0)); const bin=v=>clamp(v).toString(2).padStart(8,'0');
+  function calc(a,b){return op==='AND'?a&b:op==='OR'?a|b:op==='XOR'?a^b:(~a)&255}
+  function formats(v){return `<span class="tag">BIN ${bin(v)}</span><span class="tag">HEX 0x${clamp(v).toString(16).toUpperCase().padStart(2,'0')}</span>`}
+  function truthTable(){let rows=op==='NOT'?[[0,1],[1,0]]:[[0,0],[0,1],[1,0],[1,1]];let heads=op==='NOT'?'<th>A</th><th>R</th>':'<th>A</th><th>B</th><th>R</th>';return `<thead><tr>${heads}</tr></thead><tbody>`+rows.map(r=>{let z=op==='NOT'?1-r[0]:calc(r[0],r[1]);return `<tr data-key="${r.join('')}">${r.map(x=>`<td>${x}</td>`).join('')}<td>${z}</td></tr>`}).join('')+'</tbody>'}
+  function render(){
+    clearInterval(timer);timer=null;$('play').textContent='▶ Animar';let a=clamp($('inputA').value),b=clamp($('inputB').value),r=calc(a,b),A=bin(a),B=bin(b),R=bin(r),d=info[op];
+    $('formatsA').innerHTML=formats(a);$('formatsB').innerHTML=formats(b);$('fieldB').classList.toggle('hidden',op==='NOT');$('sideTitle').textContent=`Regra do ${d.name}`;$('description').textContent=d.desc;$('truth').innerHTML=truthTable();$('rule').innerHTML=d.rule;
+    let html='<div></div>'+[7,6,5,4,3,2,1,0].map(x=>`<div class="place">bit ${x}</div>`).join('');
+    html+='<div class="row-label">A</div>'+A.split('').map((x,i)=>bit(x,i)).join('');
+    if(op!=='NOT')html+=`<div class="symbol">${d.symbol}</div>`+B.split('').map((x,i)=>bit(x,i)).join('');
+    html+='<div class="row-label">R</div>'+R.split('').map((x,i)=>bit(x,i,true)).join('');$('bitGrid').innerHTML=html;
+    $('resBin').textContent=R;$('resDec').textContent=r;$('resHex').textContent='0x'+r.toString(16).toUpperCase().padStart(2,'0');$('resExpr').textContent=op==='NOT'?`~${a}`:`${a} ${d.symbol} ${b}`;
+    updateStep();
+  }
+  function bit(x,i,result=false){return `<div class="bit ${x==='1'?'one':'zero'} ${result?'result-bit':''}" data-index="${i}">${result?'?':x}</div>`}
+  function updateStep(){
+    const a=bin(clamp($('inputA').value)),b=bin(clamp($('inputB').value)),r=bin(calc(clamp($('inputA').value),clamp($('inputB').value)));document.querySelectorAll('.bit').forEach(el=>{let i=+el.dataset.index;el.classList.toggle('current',i===step);el.classList.toggle('done',i<step);if(el.classList.contains('result-bit'))el.textContent=i<=step?r[i]:'?'});
+    $('progress').style.width=((step+1)/8*100)+'%';$('prev').disabled=step<0;$('next').disabled=step>=7;
+    if(step>=0){let av=a[step],bv=b[step],rv=r[step];$('equation').textContent=op==='NOT'?`~ ${av} = ${rv}`:`${av} ${info[op].symbol} ${bv} = ${rv}`;document.querySelectorAll('#truth tr').forEach(tr=>tr.classList.toggle('hot',tr.dataset.key===(op==='NOT'?av:av+bv)))}else{$('equation').textContent=op==='NOT'?'~ A = R':`A ${info[op].symbol} B = R`;document.querySelectorAll('#truth tr').forEach(tr=>tr.classList.remove('hot'))}
+  }
+  function changeStep(n){step=Math.max(-1,Math.min(7,n));updateStep()}
+  document.querySelectorAll('.op').forEach(btn=>btn.onclick=()=>{document.querySelector('.op.active').classList.remove('active');btn.classList.add('active');op=btn.dataset.op;step=-1;render()});
+  ['inputA','inputB'].forEach(id=>$(id).addEventListener('input',()=>{let v=Number($(id).value);$('error').textContent=(v<0||v>255)?'Digite apenas valores entre 0 e 255. O simulador limitará o valor a 8 bits.':'';step=-1;render()}));
+  $('random').onclick=()=>{$('inputA').value=Math.floor(Math.random()*256);$('inputB').value=Math.floor(Math.random()*256);step=-1;render()};$('reset').onclick=()=>changeStep(-1);$('prev').onclick=()=>changeStep(step-1);$('next').onclick=()=>changeStep(step+1);
+  $('play').onclick=()=>{if(timer){clearInterval(timer);timer=null;$('play').textContent='▶ Animar';return}if(step>=7)step=-1;$('play').textContent='⏸ Pausar';changeStep(step+1);timer=setInterval(()=>{if(step>=7){clearInterval(timer);timer=null;$('play').textContent='▶ Animar'}else changeStep(step+1)},700)};
+  render();
+</script>
+</body>
+</html>
